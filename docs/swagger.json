@@ -1,0 +1,67 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Template for APIs with Mantis capabilities",
+        "title": "PPx Golang API template",
+        "contact": {
+            "name": "Author Email",
+            "email": "author@merck.com"
+        }
+    },
+    "host": "localhost:8080",
+    "paths": {
+        "/v1/dataModel/{name}": {
+            "get": {
+                "description": "Returns JSON with 5 tables - Product Hierarchy, Xpath Connections, MetaData, Raw Materials, Data",
+                "produces": [
+                    "application/json",
+                    "text/plain"
+                ],
+                "tags": [
+                    "dataModels"
+                ],
+                "summary": "Returns data model for Merck DB Modeling Project",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "name of product",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "json",
+                        "description": "output encoding of ('json','csv','csvFile')",
+                        "name": "encode",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/version": {
+            "get": {
+                "description": "Returns information about a given hierarchy element or measurement",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metadata"
+                ],
+                "summary": "API Version number",
+                "responses": {}
+            }
+        }
+    },
+    "tags": [
+        {
+            "description": "endpoints with metadata about the API",
+            "name": "metadata"
+        },
+        {
+            "description": "data model endpoints",
+            "name": "dataModels"
+        }
+    ]
+}

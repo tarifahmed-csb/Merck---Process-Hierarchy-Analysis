@@ -1,0 +1,45 @@
+host: localhost:8080
+info:
+  contact:
+    email: author@merck.com
+    name: Author Email
+  description: Template for APIs with Mantis capabilities
+  title: PPx Golang API template
+paths:
+  /v1/dataModel/{name}:
+    get:
+      description: Returns JSON with 5 tables - Product Hierarchy, Xpath Connections,
+        MetaData, Raw Materials, Data
+      parameters:
+      - description: name of product
+        in: path
+        name: name
+        required: true
+        type: string
+      - default: json
+        description: output encoding of ('json','csv','csvFile')
+        in: query
+        name: encode
+        type: string
+      produces:
+      - application/json
+      - text/plain
+      responses: {}
+      summary: Returns data model for Merck DB Modeling Project
+      tags:
+      - dataModels
+  /version:
+    get:
+      description: Returns information about a given hierarchy element or measurement
+      produces:
+      - application/json
+      responses: {}
+      summary: API Version number
+      tags:
+      - metadata
+swagger: "2.0"
+tags:
+- description: endpoints with metadata about the API
+  name: metadata
+- description: data model endpoints
+  name: dataModels
