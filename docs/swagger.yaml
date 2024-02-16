@@ -1,10 +1,10 @@
 host: localhost:8080
 info:
   contact:
-    email: author@merck.com
+    email: author@lehigh.edu
     name: Author Email
-  description: Template for APIs with Mantis capabilities
-  title: PPx Golang API template
+  description: golang API Template
+  title: Golang API template
 paths:
   /v1/dataModel/{name}:
     get:

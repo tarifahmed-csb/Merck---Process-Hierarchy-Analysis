@@ -11,7 +11,7 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "contact": {
             "name": "Author Email",
-            "email": "author@merck.com"
+            "email": "author@lehigh.edu"
         },
         "version": "{{.Version}}"
     },
@@ -80,8 +80,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "PPx Golang API template",
-	Description:      "Template for APIs with Mantis capabilities",
+	Title:            "Golang API template",
+	Description:      "golang API Template",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

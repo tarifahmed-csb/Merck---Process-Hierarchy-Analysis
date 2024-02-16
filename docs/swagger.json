@@ -1,11 +1,11 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Template for APIs with Mantis capabilities",
-        "title": "PPx Golang API template",
+        "description": "golang API Template",
+        "title": "Golang API template",
         "contact": {
             "name": "Author Email",
-            "email": "author@merck.com"
+            "email": "author@lehigh.edu"
         }
     },
     "host": "localhost:8080",
