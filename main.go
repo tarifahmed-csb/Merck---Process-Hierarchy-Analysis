@@ -47,7 +47,7 @@ func main() {
 
 	//Goal 1: single out only the hierarchy (process) from the output
 	//note output only contains one hierarchy/process
-	name := "me"
+	name := "bye"
 	output, err := ModelData(name)
 	if err != nil {
 		log.Fatal(err)
@@ -136,9 +136,11 @@ func main() {
 
 	}
 
-	results := output.Results
-	for _, result := range results {
+	ressy := output.Results
+
+	for _, result := range ressy {
 		err = insertResult(g, result)
+		fmt.Println("in here")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -180,9 +182,9 @@ func main() {
 func insertResult(g *gremlingo.GraphTraversalSource, result Results) error {
 	x_path_name := result.Xpath
 	measureID := result.ResultName
-	resultName := measureID + "-res"
+	resultID := result.BatchID
 
-	res, err := g.AddV("result").Property("name", resultName).Property("materialNum", result.MaterialNum).Property("batchID", result.BatchID).Property("xpath", x_path_name).Property("result", result.Result).Property("DOM", result.DOM).Property("site", result.Site).Property("measureID", measureID).Next()
+	res, err := g.AddV("result").Property("name", resultID).Property("materialNum", result.MaterialNum).Property("batchID", resultID).Property("xpath", x_path_name).Property("result", result.Result).Property("DOM", result.DOM).Property("site", result.Site).Property("measureID", resultID).Next()
 	if err != nil {
 		return errors.New("failed to execute query for xpath:" + x_path_name + "\nError:" + err.Error())
 	}
@@ -194,7 +196,12 @@ func insertResult(g *gremlingo.GraphTraversalSource, result Results) error {
 
 	//result vertex inserted, now adding edge from respective measureID to Xpath vertex
 	//newID := measureID + x_path_name
-	_, err = g.AddE("links").From(g.V(vertex.Id)).To(g.V(x_path_name)).Next()
+	_, err = g.AddE("links").From(g.V(x_path_name)).To(g.V(vertex.Id)).Next()
+	fmt.Println("here is xpath")
+	fmt.Println(x_path_name)
+	fmt.Println("here is vertex id")
+	fmt.Println(resultID)
+
 	if err != nil {
 		return errors.New("failed to insert edge for result with measure:" + measureID + "\nError:" + err.Error())
 	}
