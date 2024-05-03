@@ -17,10 +17,14 @@ package main
 // }
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"log"
+	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	gremlingo "github.com/apache/tinkerpop/gremlin-go/v3/driver"
 )
@@ -43,17 +47,201 @@ func main() {
 	//which is used to navigate & query the graph data stored remotely
 	g := gremlingo.Traversal_().WithRemote(driverRemoteConnection)
 
-	//MODIFYING TO USE API DIRECTLY FROM THE CODE AS OPPOSED TO HTTP
+	//start for demo program
+	reader := bufio.NewReader(os.Stdin)
 
-	//Goal 1: single out only the hierarchy (process) from the output
-	//note output only contains one hierarchy/process
-	name := "bye"
+	for {
+		fmt.Println("Choose an action (1-5):")
+		fmt.Println("1. Insert a new process")
+		fmt.Println("2. Query all Processes")
+		fmt.Println("3. Query all Stages of a given Process")
+		fmt.Println("4. Query all children of a given Process")
+		fmt.Println("5. Query all measures for a given Process")
+		fmt.Println("6. Query all results for a given Process")
+		fmt.Print("Enter your choice: ")
+
+		input, _ := reader.ReadString('\n')
+		input = input[:len(input)-1] // Remove newline character
+
+		choice, err := strconv.Atoi(input)
+		if err != nil || choice < 1 || choice > 6 {
+			fmt.Println("Invalid input. Please enter a number between 1 and 5.")
+			continue
+		}
+
+		switch choice {
+		case 1:
+			fmt.Println("You chose Option 1")
+			// Ask the user to input a name for a process
+			fmt.Print("Enter a name for the process: ")
+			processName, _ := reader.ReadString('\n')
+			processName = processName[:len(processName)-1] // Remove newline character
+			insertNewProcess(g, processName)
+		case 2:
+			fmt.Println("You chose Option 2")
+			getAllProcesses(g)
+
+		case 3:
+			fmt.Println("You chose Option 3")
+			fmt.Println("Enter the name of the Process")
+			processName, _ := reader.ReadString('\n')
+			processName = processName[:len(processName)-1] // Remove newline character
+			getAllStages(g, processName)
+		case 4:
+			fmt.Println("You chose Option 4")
+			fmt.Println("Enter the name of the Process")
+			processName, _ := reader.ReadString('\n')
+			processName = processName[:len(processName)-1] // Remove newline character
+			getAllChildren(g, processName)
+		case 5:
+			fmt.Println("You chose Option 5")
+			fmt.Println("Enter the name of the Process")
+			processName, _ := reader.ReadString('\n')
+			processName = processName[:len(processName)-1] // Remove newline character
+			getAllMeasures(g, processName)
+		case 6:
+			fmt.Println("You chose Option 6")
+			fmt.Println("Enter the name of the Process")
+
+			processName, _ := reader.ReadString('\n')
+			processName = processName[:len(processName)-1] // Remove newline character
+			getAllResults(g, processName)
+		}
+
+		// Ask the user if they want to continue
+		fmt.Print("Do you want to enter another menu option? (y/n): ")
+		again, _ := reader.ReadString('\n')
+		again = again[:len(again)-1] // Remove newline character
+
+		if again != "y" {
+			break
+		}
+	}
+
+	// rawmats := output.RawMaterials
+
+	// for _, rawmat := range rawmats {
+	// 	err = insertRawMat(g, rawmat)
+	// }
+
+	//from a process give all measures,
+	//linking raw materials to processes (jumping from one process to another)
+	//
+
+	// result, err := g.AddE("has").From(g.V("test-1")).To(g.V("test-1-1-1-M1")).Next()
+
+	// fmt.Println("here is result:")
+
+	// fmt.Println(result)
+	// fmt.Println("here is err")
+
+	// fmt.Println(err)
+
+	// Perform traversal
+	// results, err := g.V().Limit(5).ToList()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+	// // Print results
+	// fmt.Println("printing here")
+	// for _, r := range results {
+	// 	fmt.Println(r.GetString())
+	// }
+}
+func getAllResults(g *gremlingo.GraphTraversalSource, name string) {
+	fmt.Println("\n\nGetting all results for Process " + name + ":")
+	start := time.Now()
+
+	result, err := g.V(name).Repeat(gremlingo.T__.Out()).Until(gremlingo.T__.HasLabel("result")).ToList()
+
+	end := time.Now()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, vertex := range result {
+		fmt.Println(vertex)
+	}
+	elapsedTime := end.Sub(start)
+	fmt.Println("Elapsed Time:", elapsedTime)
+}
+
+func getAllMeasures(g *gremlingo.GraphTraversalSource, name string) {
+	fmt.Println("\n\nGetting all measures for Process " + name + ":")
+	start := time.Now()
+
+	result, err := g.V(name).Repeat(gremlingo.T__.Out()).Until(gremlingo.T__.HasLabel("Measure")).ToList()
+
+	end := time.Now()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, vertex := range result {
+		fmt.Println(vertex)
+	}
+	elapsedTime := end.Sub(start)
+	fmt.Println("Elapsed Time:", elapsedTime)
+}
+
+func getAllChildren(g *gremlingo.GraphTraversalSource, name string) {
+	fmt.Println("\n\nGetting all children for Process " + name + ":")
+	start := time.Now()
+
+	result, err := g.V(name).Repeat(gremlingo.T__.Out()).Until(gremlingo.T__.HasLabel("Measure")).Path().ToList()
+
+	end := time.Now()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, vertex := range result {
+		fmt.Println(vertex)
+	}
+	elapsedTime := end.Sub(start)
+	fmt.Println("Elapsed Time:", elapsedTime)
+}
+
+func getAllProcesses(g *gremlingo.GraphTraversalSource) {
+	fmt.Println("\n\nHere are all Processes:")
+	start := time.Now()
+	result, err := g.V().HasLabel("Process").ToList()
+	end := time.Now()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, vertex := range result {
+		fmt.Println(vertex)
+	}
+	elapsedTime := end.Sub(start)
+	fmt.Println("Elapsed Time:", elapsedTime)
+}
+
+func getAllStages(g *gremlingo.GraphTraversalSource, name string) {
+	start := time.Now()
+	result, err := g.V(name).Out().ToList()
+	end := time.Now()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, vertex := range result {
+		fmt.Println(vertex)
+	}
+	elapsedTime := end.Sub(start)
+	fmt.Println("Elapsed Time:", elapsedTime)
+
+}
+
+func insertNewProcess(g *gremlingo.GraphTraversalSource, name string) {
+	fmt.Println("Inserting new Process: " + name + ", loading data...")
 	output, err := ModelData(name)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	//Goal 2: Store process, the stages, operations, & actions and any measures into variables
+
+	start := time.Now()
 
 	//Here we store process
 	processName, err := insertProcess(g, output.Hierarchy.Process)
@@ -123,7 +311,6 @@ func main() {
 			}
 		}
 	}
-
 	//Now iterate through x_paths & adds the vertexes
 	//Plus corresponding edges from measure to xpath
 	x_paths := output.Xpath
@@ -136,11 +323,11 @@ func main() {
 
 	}
 
-	ressy := output.Results
+	ress := output.Results
 
-	for _, result := range ressy {
+	for _, result := range ress {
 		err = insertResult(g, result)
-		fmt.Println("in here")
+		//fmt.Println("in here")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -150,32 +337,44 @@ func main() {
 
 		//insertXPath(g, x_path)
 	}
+	end := time.Now()
 
-	//from a process give all measures,
-	//linking raw materials to processes (jumping from one process to another)
-	//
-
-	// result, err := g.AddE("has").From(g.V("test-1")).To(g.V("test-1-1-1-M1")).Next()
-
-	// fmt.Println("here is result:")
-
-	// fmt.Println(result)
-	// fmt.Println("here is err")
-
-	// fmt.Println(err)
-
-	// Perform traversal
-	// results, err := g.V().Limit(5).ToList()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-	// // Print results
-	// fmt.Println("printing here")
-	// for _, r := range results {
-	// 	fmt.Println(r.GetString())
-	// }
+	fmt.Println("Database Updated!")
+	elapsedTime := end.Sub(start)
+	fmt.Println("Elapsed Time:", elapsedTime)
 }
+
+// fucntion to insert a result vertex within the graph
+// returns an error if insertion fails, else returns nil
+// func insertRawMat(g *gremlingo.GraphTraversalSource, rawMat RawMaterials) error {
+// 	x_path_name := result.Xpath
+// 	measureID := result.ResultName
+// 	resultID := result.BatchID
+
+// 	res, err := g.AddV("result").Property("name", resultID).Property("materialNum", result.MaterialNum).Property("batchID", resultID).Property("xpath", x_path_name).Property("result", result.Result).Property("DOM", result.DOM).Property("site", result.Site).Property("measureID", resultID).Next()
+// 	if err != nil {
+// 		return errors.New("failed to execute query for xpath:" + x_path_name + "\nError:" + err.Error())
+// 	}
+
+// 	vertex, err := res.GetVertex()
+// 	if err != nil {
+// 		return errors.New("Not a vertex" + err.Error())
+// 	}
+
+// 	//result vertex inserted, now adding edge from respective measureID to Xpath vertex
+// 	//newID := measureID + x_path_name
+// 	_, err = g.AddE("links").From(g.V(x_path_name)).To(g.V(vertex.Id)).Next()
+// 	fmt.Println("here is xpath")
+// 	fmt.Println(x_path_name)
+// 	fmt.Println("here is vertex id")
+// 	fmt.Println(resultID)
+
+// 	if err != nil {
+// 		return errors.New("failed to insert edge for result with measure:" + measureID + "\nError:" + err.Error())
+// 	}
+
+// 	return nil
+// }
 
 // fucntion to insert a result vertex within the graph
 // returns an error if insertion fails, else returns nil
@@ -197,10 +396,10 @@ func insertResult(g *gremlingo.GraphTraversalSource, result Results) error {
 	//result vertex inserted, now adding edge from respective measureID to Xpath vertex
 	//newID := measureID + x_path_name
 	_, err = g.AddE("links").From(g.V(x_path_name)).To(g.V(vertex.Id)).Next()
-	fmt.Println("here is xpath")
-	fmt.Println(x_path_name)
-	fmt.Println("here is vertex id")
-	fmt.Println(resultID)
+	//fmt.Println("here is xpath")
+	//fmt.Println(x_path_name)
+	//fmt.Println("here is vertex id")
+	//fmt.Println(resultID)
 
 	if err != nil {
 		return errors.New("failed to insert edge for result with measure:" + measureID + "\nError:" + err.Error())

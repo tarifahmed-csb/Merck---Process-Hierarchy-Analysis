@@ -15,7 +15,7 @@ type Batch struct {
 	DOM         string `json:"DOM"`
 }
 
-// Reverse string function from:
+// Reverse string function from:F
 // https://stackoverflow.com/questions/1752414/how-to-reverse-a-string-in-go
 func StringReverse(s string) string {
 	size := len(s)
@@ -80,8 +80,8 @@ func defineP() map[string]map[string]float64 {
 	// "stdDev" = standard devation for batch results
 	// "offset" = max offset from mean for batch results
 	p["res"] = make(map[string]float64)
-	p["res"]["minBatch"] = 20
-	p["res"]["batch"] = 0.95
+	p["res"]["minBatch"] = 3
+	p["res"]["batch"] = 0.1
 	layout := "01/02/2006 3:04:05 PM"
 	t, _ := time.Parse(layout, "01/01/2022 9:03:46 AM")
 	p["res"]["startDOM"] = float64(t.Unix())
@@ -92,7 +92,7 @@ func defineP() map[string]map[string]float64 {
 
 	// "minRawMat" = minimum number of raw materials
 	p["rm"] = make(map[string]float64)
-	p["rm"]["minRawMat"] = 5
+	p["rm"]["minRawMat"] = 3
 	return p
 }
 
