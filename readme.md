@@ -1,5 +1,11 @@
 # Golang template for ppx applications
 
+## Starting Notebook
+In root directory: python -m graph_notebook.start_notebook --notebooks-dir notebook/destination/dir 
+
+## Starting Gremlin Server
+For Windows: in root directory merck: ./gremlin-server/bin/gremlin-server.bat
+
 ### Setup
 Initialize code first by running the following
 `go mod init`
