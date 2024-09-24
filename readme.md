@@ -1,10 +1,22 @@
-# Golang template for ppx applications
+# Starting Jupyter Notebook
 
-## Starting Notebook
-In root directory: python -m graph_notebook.start_notebook --notebooks-dir notebook/destination/dir 
+### install the package
+
+pip install graph-notebook
+
+## Jupyter Classic Notebook
+
+#### Enable the visualization widget
+
+jupyter nbextension enable  --py --sys-prefix graph_notebook.widgets
+
+# start jupyter notebook
+In root directory: python -m graph_notebook.start_notebook --notebooks-dir notebook/destination/dir
 
 ## Starting Gremlin Server
 For Windows: in root directory merck: ./gremlin-server/bin/gremlin-server.bat
+
+## Golang Setup
 
 ### Setup
 Initialize code first by running the following
