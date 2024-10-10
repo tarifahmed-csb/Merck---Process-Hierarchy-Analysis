@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws" //credentials, regions, and settings
     "github.com/aws/aws-sdk-go/aws/session" //create and manag a session
@@ -11,6 +12,9 @@ import (
 
 //function just in case I need to create a new table
 func GetAllStages(tableName string) {
+	// Start the timer
+	startTime := time.Now()
+
 	//Session
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String("us-east-2")},
@@ -44,10 +48,15 @@ func GetAllStages(tableName string) {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
+	// Calculate the duration
+	duration := time.Since(startTime)
 
 	// Print the list of stages
 	fmt.Println("Retrieved stages:")
 	for _, item := range result.Items {
 		fmt.Printf("Stage: %v\n", item)
 	}
+
+	//Printing duration
+	fmt.Printf("Time taken to retrieve data: %v\n", duration)
 }

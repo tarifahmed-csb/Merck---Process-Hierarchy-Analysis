@@ -1,4 +1,12 @@
-//Provided model data with probabilities changed 
+/*
+ * This package includes code inspired by the work of:
+ *
+ * Author: Brett Duersch
+ * Title: Merck Process Hierarchy Modeling
+ * Date: February 16, 2024 
+ *
+ * Probabilites modified to concise data
+ */
 package main
 
 import (
@@ -42,24 +50,24 @@ func defineP() map[string]map[string]float64 {
 	p["prc"] = make(map[string]float64)
 	p["prc"]["minMeasure"] = 0
 	p["prc"]["measure"] = 0
-	p["prc"]["minLevel"] = 1
-	p["prc"]["level"] = 0.1
+	p["prc"]["minLevel"] = 3
+	p["prc"]["level"] = 0.7
 
 	p["stg"] = make(map[string]float64)
 	p["stg"]["minMeasure"] = 0
-	p["stg"]["measure"] = 0.1
+	p["stg"]["measure"] = 0.25
 	p["stg"]["minLevel"] = 1
-	p["stg"]["level"] = 0.1
+	p["stg"]["level"] = 0.6
 
 	p["op"] = make(map[string]float64)
 	p["op"]["minMeasure"] = 0
-	p["op"]["measure"] = 0.1
+	p["op"]["measure"] = 0.25
 	p["op"]["minLevel"] = 1
-	p["op"]["level"] = 0.1
+	p["op"]["level"] = 0.6
 
 	p["act"] = make(map[string]float64)
 	p["act"]["minMeasure"] = 1
-	p["act"]["measure"] = 0.1
+	p["act"]["measure"] = 0.7
 	p["act"]["minLevel"] = 0
 	p["act"]["level"] = 0
 
@@ -69,9 +77,9 @@ func defineP() map[string]map[string]float64 {
 	// "meta" = probability of adding extra metadata elements
 	p["mes"] = make(map[string]float64)
 	p["mes"]["minXpath"] = 1
-	p["mes"]["xpath"] = 0.1
-	p["mes"]["minMeta"] = 1
-	p["mes"]["meta"] = 0.1
+	p["mes"]["xpath"] = 0.3
+	p["mes"]["minMeta"] = 2
+	p["mes"]["meta"] = 0.5
 
 	// "minBatch" = minimum number of batches
 	// "batch" = probability of adding extra batches
@@ -81,8 +89,8 @@ func defineP() map[string]map[string]float64 {
 	// "stdDev" = standard devation for batch results
 	// "offset" = max offset from mean for batch results
 	p["res"] = make(map[string]float64)
-	p["res"]["minBatch"] = 2
-	p["res"]["batch"] = 0.1
+	p["res"]["minBatch"] = 20
+	p["res"]["batch"] = 0.95
 	layout := "01/02/2006 3:04:05 PM"
 	t, _ := time.Parse(layout, "01/01/2022 9:03:46 AM")
 	p["res"]["startDOM"] = float64(t.Unix())
@@ -93,7 +101,7 @@ func defineP() map[string]map[string]float64 {
 
 	// "minRawMat" = minimum number of raw materials
 	p["rm"] = make(map[string]float64)
-	p["rm"]["minRawMat"] = 1
+	p["rm"]["minRawMat"] = 5
 	return p
 }
 

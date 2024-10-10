@@ -36,7 +36,7 @@ func PopulateDatabase(tableName string) {
 		os.Exit(1)
 	}
 
-	fmt.Println("Successfully connected to DynamoDB")
+	fmt.Println("Successfully connected to Merck-Fall2024")
 
 	// Genertating data
 	data, err := ModelData("Process1")
@@ -275,6 +275,6 @@ func PopulateDatabase(tableName string) {
 	duration := endTime.Sub(startTime) //total time 
 
 	//Success
-	fmt.Printf("Successfully added model data to the DynamoDB table\n")
+	fmt.Printf("Successfully added model data to the Merck-Fall2024 table\n")
 	fmt.Printf("Time taken: %.2f ms\n", float64(duration.Milliseconds()))
 }

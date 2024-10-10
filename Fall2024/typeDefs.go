@@ -1,5 +1,12 @@
-//Provided typdefs 
-//Nothign modified 
+/*
+ * This package includes code inspired by the work of:
+ *
+ * Author: Brett Duersch
+ * Title: Merck Process Hierarchy Modeling
+ * Date: February 16, 2024 
+ *
+ * Nothing Modified
+ */
 
 package main
 
