@@ -14,7 +14,7 @@ import (
 func DeleteAllItemsFromTable(tableName string) {
     //Session
     sess, err := session.NewSession(&aws.Config{
-        Region: aws.String("us-east-2")},
+        Region: aws.String("us-east-1")},
     )
 
 	//Handling error

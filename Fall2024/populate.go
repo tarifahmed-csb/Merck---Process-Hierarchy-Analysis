@@ -16,7 +16,7 @@ func PopulateDatabase(tableName string) {
 
 	//Session 
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-2")},
+		Region: aws.String("us-east-1")},
 	)
 
 	//Handling error
@@ -79,8 +79,8 @@ func PopulateDatabase(tableName string) {
 	for _, stage := range data.Hierarchy.Stages {
 		//STAGE
 		stageItem := map[string]*dynamodb.AttributeValue{
-			"PK":         {S: aws.String("Stage#" + stage.Stage)},
-			"SK":         {S: aws.String("Stage#" + stage.Stage)},
+			"PK":         {S: aws.String(stage.Stage)},
+			"SK":         {S: aws.String(stage.Stage)},
 			"EntityType": {S: aws.String("Stage")},
 			"EntityID":   {S: aws.String(stage.Stage)},
 		}
@@ -123,8 +123,8 @@ func PopulateDatabase(tableName string) {
 			for _, action := range operation.Actions {
 				//ACTION
 				actionItem := map[string]*dynamodb.AttributeValue{
-					"PK":         {S: aws.String("Action#" + action.Action)},
-					"SK":         {S: aws.String("Action#" + action.Action)},
+					"PK":         {S: aws.String(action.Action)},
+					"SK":         {S: aws.String(action.Action)},
 					"EntityType": {S: aws.String("Action")},
 					"EntityID":   {S: aws.String(action.Action)},
 					"ParentID":   {S: aws.String(operation.Operation)},
