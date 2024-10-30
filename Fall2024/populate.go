@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -57,8 +58,8 @@ func PopulateDatabase(tableName string) {
 
 	//PROCESS
 	processItem := map[string]*dynamodb.AttributeValue{
-		"PK":         {S: aws.String("Process#" + data.Hierarchy.Process)}, //PRIMARY KEY
-		"SK":         {S: aws.String("Process#" + data.Hierarchy.Process)}, //SORT KEY
+		//"PK":         {S: aws.String("Process#" + data.Hierarchy.Process)}, //PRIMARY KEY
+		//"SK":         {S: aws.String("Process#" + data.Hierarchy.Process)}, //SORT KEY
 		"EntityType": {S: aws.String("Process")},
 		"EntityID":   {S: aws.String(data.Hierarchy.Process)},
 	}
@@ -79,8 +80,8 @@ func PopulateDatabase(tableName string) {
 	for _, stage := range data.Hierarchy.Stages {
 		//STAGE
 		stageItem := map[string]*dynamodb.AttributeValue{
-			"PK":         {S: aws.String(stage.Stage)},
-			"SK":         {S: aws.String(stage.Stage)},
+			//"PK":         {S: aws.String(stage.Stage)},
+			//"SK":         {S: aws.String(stage.Stage)},
 			"EntityType": {S: aws.String("Stage")},
 			"EntityID":   {S: aws.String(stage.Stage)},
 		}
@@ -101,8 +102,8 @@ func PopulateDatabase(tableName string) {
 		for _, operation := range stage.Operations {
 			//OPERATION
 			operationItem := map[string]*dynamodb.AttributeValue{
-				"PK":         {S: aws.String("Operation#" + operation.Operation)},
-				"SK":         {S: aws.String("Operation#" + operation.Operation)},
+				//"PK":         {S: aws.String("Operation#" + operation.Operation)},
+				//"SK":         {S: aws.String("Operation#" + operation.Operation)},
 				"EntityType": {S: aws.String("Operation")},
 				"EntityID":   {S: aws.String(operation.Operation)},
 				"ParentID":   {S: aws.String(stage.Stage)},
@@ -123,8 +124,8 @@ func PopulateDatabase(tableName string) {
 			for _, action := range operation.Actions {
 				//ACTION
 				actionItem := map[string]*dynamodb.AttributeValue{
-					"PK":         {S: aws.String(action.Action)},
-					"SK":         {S: aws.String(action.Action)},
+					//"PK":         {S: aws.String(action.Action)},
+					//"SK":         {S: aws.String(action.Action)},
 					"EntityType": {S: aws.String("Action")},
 					"EntityID":   {S: aws.String(action.Action)},
 					"ParentID":   {S: aws.String(operation.Operation)},
@@ -144,11 +145,11 @@ func PopulateDatabase(tableName string) {
 				for _, measure := range action.Measures {
 					//MEASURE
 					measureItem := map[string]*dynamodb.AttributeValue{
-						"PK":         {S: aws.String("Measure#" + measure.MeasureID)},
-						"SK":         {S: aws.String("Measure#" + measure.MeasureID)},
+						//"PK":         {S: aws.String("Measure#" + measure.MeasureID)},
+						//"SK":         {S: aws.String("Measure#" + measure.MeasureID)},
 						"EntityType": {S: aws.String("Measure")},
 						"EntityID":   {S: aws.String(measure.MeasureID)},
-						"Measure":    {S: aws.String(measure.Measure)},
+						"Measure": 	  {S: aws.String(strings.TrimPrefix(measure.Measure, "Measure: "))},
 						"ParentID":   {S: aws.String(action.Action)},
 					}
 					//Inserting the measure 
@@ -171,12 +172,12 @@ func PopulateDatabase(tableName string) {
 	for _, xpath := range data.Xpath {
 		//XPATH
 		xpathItem := map[string]*dynamodb.AttributeValue{
-			"PK":         {S: aws.String("Xpath#" + xpath.Xpath)},
-			"SK":         {S: aws.String("Xpath#" + xpath.Xpath)},
+			//"PK":         {S: aws.String("Xpath#" + xpath.Xpath)},
+			//"SK":         {S: aws.String("Xpath#" + xpath.Xpath)},
 			"EntityType": {S: aws.String("Xpath")},
 			"EntityID":   {S: aws.String(xpath.Xpath)},
 			"MeasureID":  {S: aws.String(xpath.MeasureID)},
-			"Site":       {S: aws.String(xpath.Site)},
+			"Site":       {S: aws.String(strings.TrimPrefix((xpath).Site, "Site- "))},
 		}
 		//Inserting the xpath
 		_, err = svc.PutItem(&dynamodb.PutItemInput{
@@ -195,12 +196,12 @@ func PopulateDatabase(tableName string) {
 	for _, metadata := range data.Metadata {
 		//METADATA
 		metadataItem := map[string]*dynamodb.AttributeValue{
-			"PK":         {S: aws.String("Metadata#" + metadata.MeasureID + "#" + metadata.Key)},
-			"SK":         {S: aws.String("Metadata#" + metadata.MeasureID + "#" + metadata.Key)},
+			//"PK":         {S: aws.String("Metadata#" + metadata.MeasureID + "#" + metadata.Key)},
+			//"SK":         {S: aws.String("Metadata#" + metadata.MeasureID + "#" + metadata.Key)},
 			"EntityType": {S: aws.String("Metadata")},
 			"EntityID":   {S: aws.String(metadata.MeasureID)},
-			"Key":        {S: aws.String(metadata.Key)},
-			"Value":      {S: aws.String(metadata.Value)},
+			"Key":        {S: aws.String(strings.TrimPrefix(metadata.Key, "Key "))},
+			"Value":      {S: aws.String(strings.TrimPrefix(metadata.Value, "Value "))},
 		}
 		//Inserting the metadata
 		_, err = svc.PutItem(&dynamodb.PutItemInput{
@@ -219,13 +220,13 @@ func PopulateDatabase(tableName string) {
 	for _, result := range data.Results {
 		//RESULT
 		resultItem := map[string]*dynamodb.AttributeValue{
-			"PK":         {S: aws.String("Result#" + result.Xpath + "#" + result.BatchID)},
-			"SK":         {S: aws.String("Result#" + result.Xpath + "#" + result.BatchID)},
+			//"PK":         {S: aws.String("Result#" + result.Xpath + "#" + result.BatchID)},
+			//"SK":         {S: aws.String("Result#" + result.Xpath + "#" + result.BatchID)},
 			"EntityType": {S: aws.String("Result")},
 			"EntityID":   {S: aws.String(result.Xpath + "#" + result.BatchID)},
 			"Xpath":      {S: aws.String(result.Xpath)},
-			"Site":       {S: aws.String(result.Site)},
-			"BatchID":    {S: aws.String(result.BatchID)},
+			"Site":       {S: aws.String(strings.TrimPrefix(result.Site, "Site- "))},
+			"BatchID":    {N: aws.String(result.BatchID)},
 			"DOM":        {S: aws.String(result.DOM)},
 			"ResultName": {S: aws.String(result.ResultName)},
 			"Result":     {N: aws.String(fmt.Sprintf("%f", result.Result))},
@@ -247,8 +248,8 @@ func PopulateDatabase(tableName string) {
 	for _, rawMaterial := range data.RawMaterials {
 		//RAWMATERIALS
 		rawMaterialItem := map[string]*dynamodb.AttributeValue{
-			"PK":                 {S: aws.String("RawMaterial#" + rawMaterial.ParentBatchID + "#" + rawMaterial.ChildMaterialName)},
-			"SK":                 {S: aws.String("RawMaterial#" + rawMaterial.ParentBatchID + "#" + rawMaterial.ChildMaterialName)},
+			//"PK":                 {S: aws.String("RawMaterial#" + rawMaterial.ParentBatchID + "#" + rawMaterial.ChildMaterialName)},
+			//"SK":                 {S: aws.String("RawMaterial#" + rawMaterial.ParentBatchID + "#" + rawMaterial.ChildMaterialName)},
 			"EntityType":         {S: aws.String("RawMaterial")},
 			"EntityID":           {S: aws.String(rawMaterial.ParentBatchID + "#" + rawMaterial.ChildMaterialName)},
 			"ParentBatchID":      {S: aws.String(rawMaterial.ParentBatchID)},

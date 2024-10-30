@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Merck-Fall2024")
+	fmt.Println("Merck-Fall2024-Final")
 	fmt.Println("Choose an option:")
 	fmt.Println("1. Populate")
 	fmt.Println("2. Delete all items")
@@ -20,7 +20,7 @@ func main() {
 	choice := strings.TrimSpace(scanner.Text())
 
 	// Defining table
-	tableName := "Merck-Fall2024"
+	tableName := "Merck-Fall2024-Final"
 
 	// Running the selected option
 	switch choice {
