@@ -1,5 +1,11 @@
 # Golang template for ppx applications
 
+## Starting Notebook
+In root directory: python -m graph_notebook.start_notebook --notebooks-dir notebook/destination/dir 
+
+## Starting Gremlin Server
+For Windows: in root directory merck: ./gremlin-server/bin/gremlin-server.bat
+
 ### Setup
 Initialize code first by running the following
 `go mod init`
@@ -27,3 +33,27 @@ This is done taking the following steps in the terminal
 `go build`  
 The uprev executible shold now be present in the child directory and 
 will run when the deploy script is executed
+
+### HTTP Standards
+- Neptune : port 1010
+- Dynamo : port 1011
+- PostgreSQL : port 1012
+All backends will prepare a /build and /query route for HTTP request, both will use HTTP POST method.  
+The HTTP request from front-end will send a JSON in the following configuration:  
+```
+Headers :  
+type : 'build'  
+name : name for 'build' (^)  
+```
+  
+or  
+  
+```
+Headers :  
+type : 'query' (type of query; process, measures, or materials)  
+proc : '***' / process name (either wildcard for all, or the process name to query under)  
+```  
+Backend should read JSON file and if type is build, then it should route to the /build directory which will run the build function.  
+And if the type is query it should route to the /query directory with the query functions.  
+  
+### 
