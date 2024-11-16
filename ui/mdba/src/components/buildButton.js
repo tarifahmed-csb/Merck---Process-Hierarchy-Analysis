@@ -14,13 +14,14 @@ async function DBuild(p1, p2) {
   console.log(p1)
   // 1010 for Graph
   fetch('http://localhost:1010/build', {
-    method: 'POST',
     headers:{
-      'Content-type': 'application/json'
+      "Content-Type": "application/json",
+      'Access-Control-Allow-Origin' : '*',
     },
+    method: "POST",
     body: JSON.stringify({
-      key1: 'build',
-      key2: p2
+      Type: "build",
+      Name: "test",
     }),
   })
   .then(response => response.json())
@@ -31,14 +32,14 @@ async function DBuild(p1, p2) {
   .catch((error) => {console.error('ERR', error)});
 
   //1011 for Dynamo
-  fetch('http://localhost:1011/build', { 
+  fetch('http://localhost:1011/build', {
     method: 'POST',
     headers:{
       'Content-type': 'application/json'
     },
     body: JSON.stringify({
-      key1: 'build',
-      key2: p2
+      Type: 'build',
+      Name: 'test',
     }),
   })
   .then(response => response.json())

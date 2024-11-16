@@ -56,4 +56,54 @@ proc : '***' / process name (either wildcard for all, or the process name to que
 Backend should read JSON file and if type is build, then it should route to the /build directory which will run the build function.  
 And if the type is query it should route to the /query directory with the query functions.  
   
-### 
+__RETURN__:  
+
+```
+Headers :
+staus : 'OK' or 'Failed'
+time : str (how long did the query take)   
+err : reason for failure, ex. 'no such process' \ 'process already exists'
+```
+  
+#### HTTP Handler Outline
+```GO
+import (
+    "encoding/json"
+    "fmt"
+    "net/http"
+)
+type Req struct {
+    Type string
+    Name string
+}
+
+func buildParse(w http.ResponseWriter, r *http.Request) {
+    var build Req
+
+    err := json.NewDecoder(r.body).Decode(&build)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+    /* Call build func using build.Type and build.Name */
+}
+func queryParse(w http.ResponseWriter, r *http.Request) {
+    var query Req
+
+    err := json.NewDecoder(r.body).Decode(&query)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+    /* Call query func using query.Type and query.Name */
+}
+
+func main(){
+    srv := http.NewServeMux()
+    srv.HandleFunc("/build", buildParse)
+    srv.HandleFunc("/query", queryParse)
+    
+    err := http.ListenAndServe(":1010", srv)
+    log.Fatal(err)
+}
+```
