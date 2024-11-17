@@ -70,10 +70,11 @@ func dataModelEndpt(c echo.Context) error {
 
 	// get query parameters from input URL
 	name := c.Param("name")
+	matNum := c.Param("matNum")
 	encode := c.QueryParam("encode")
 
 	// run model
-	outPut, err := ModelData(name)
+	outPut, err := ModelDataParent(name, matNum)
 	if err != nil {
 		fmt.Println(err)
 		return (c.JSON(http.StatusBadRequest, err.Error()))

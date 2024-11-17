@@ -7,6 +7,9 @@
 node_modules/
 dist/
 
+# Gremlin Server
+gremlin-server
+
 # Compiled Java class files
 *.class
 

@@ -1,5 +1,11 @@
 # Starting Jupyter Notebook
 
+## Notes for Set up
+
+Have python 3.10 installed
+
+Have apache tinkerpop gremlin server installed (to host a graph database locally)
+
 ### install the package
 
 pip install graph-notebook
