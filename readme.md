@@ -41,17 +41,25 @@ will run when the deploy script is executed
 All backends will prepare a /build and /query route for HTTP request, both will use HTTP POST method.  
 The HTTP request from front-end will send a JSON in the following configuration:  
 ```
-Headers :  
-type : 'build'  
-name : name for 'build' (^)  
+Headers {
+    'application-type' : 'json'
+    }, 
+body{
+    type : 'build'  
+    name : name for 'build' (^)  
+}
 ```
   
 or  
   
 ```
-Headers :  
-type : 'query' (type of query; process, measures, or materials)  
-proc : '***' / process name (either wildcard for all, or the process name to query under)  
+Headers {
+    'application-type' : 'json'
+    }, 
+body {
+    type : 'query' (type of query; process, measures, or materials)  
+    proc : '***' / process name (either wildcard for all, or the process name to query under)  
+}
 ```  
 Backend should read JSON file and if type is build, then it should route to the /build directory which will run the build function.  
 And if the type is query it should route to the /query directory with the query functions.  
@@ -59,10 +67,14 @@ And if the type is query it should route to the /query directory with the query 
 __RETURN__:  
 
 ```
-Headers :
-staus : 'OK' or 'Failed'
-time : str (how long did the query take)   
-err : reason for failure, ex. 'no such process' \ 'process already exists'
+Headers {
+    'application-type' : 'json'
+    },
+body{
+    status : 'OK' or 'Failed'
+    time : str (how long did the query take)   
+    err : reason for failure, ex. 'no such process' \ 'process already exists'
+}
 ```
   
 #### HTTP Handler Outline
