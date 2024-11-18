@@ -52,7 +52,7 @@ type Xpath struct {
 }
 
 type Metadata struct {
-	MeasureID string `json:"measureID"`
+	MeasureID int `json:"measureID"`
 	Key       string `json:"key"`
 	Value     string `json:"value"`
 }

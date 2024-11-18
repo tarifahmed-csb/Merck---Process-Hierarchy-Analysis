@@ -6,6 +6,8 @@
  * Date: February 16, 2024 
  *
  * Probabilites modified to concise data
+
+ rand.seed()
  */
 package main
 
