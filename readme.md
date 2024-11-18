@@ -79,43 +79,58 @@ body{
   
 #### HTTP Handler Outline
 ```GO
+package main
+
 import (
-    "encoding/json"
-    "fmt"
-    "net/http"
+	"fmt"
+	"net/http"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
+
 type Req struct {
-    Type string
-    Name string
+	Type string `json:"Type"`
+	Name string `json:"Name"`
 }
 
-func buildParse(w http.ResponseWriter, r *http.Request) {
-    var build Req
-
-    err := json.NewDecoder(r.body).Decode(&build)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
-        return
-    }
-    /* Call build func using build.Type and build.Name */
-}
-func queryParse(w http.ResponseWriter, r *http.Request) {
-    var query Req
-
-    err := json.NewDecoder(r.body).Decode(&query)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
-        return
-    }
-    /* Call query func using query.Type and query.Name */
+func enableCORS(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST,GET")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Content-Type")
 }
 
-func main(){
-    srv := http.NewServeMux()
-    srv.HandleFunc("/build", buildParse)
-    srv.HandleFunc("/query", queryParse)
-    
-    err := http.ListenAndServe(":1010", srv)
-    log.Fatal(err)
+func fakeBuild(s string) string {
+	return "5ms"
+}
+
+func main() {
+	e := echo.New()
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
+	}))
+	e.Use(middleware.Logger())
+
+	e.POST("/build", func(c echo.Context) error {
+		b := new(Req)
+		if err := c.Bind(b); err != nil {
+			return err
+		}
+		fmt.Println("Type rec : " + b.Type + "\nName : " + b.Name)
+		rTime := fakeBuild(b.Name)
+		var Response struct {
+			Status string `json:"status"`
+			Time   string `json:"time"`
+			Err    string `json:"error"`
+		}
+		Response.Status = "OK"
+		Response.Time = rTime
+		Response.Err = "N/a"
+		fmt.Println(Response)
+		return c.JSON(http.StatusOK, &Response)
+	})
+	e.Logger.Fatal(e.Start(":1010"))
 }
 ```
