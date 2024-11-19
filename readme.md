@@ -104,6 +104,17 @@ func fakeBuild(s string) string {
 	return "5ms"
 }
 
+func fakeQuery(s string, b string) queryResponse {
+	return queryResponse{"8ms", "measure-1-1-1-M2"}
+}
+
+type queryResponse struct {
+	time   string `json:"time"`
+	result string `json:"result"`
+}
+
+// Handlers use echo, refer to https://echo.labstack.com/docs for documentation
+
 func main() {
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -131,6 +142,30 @@ func main() {
 		fmt.Println(Response)
 		return c.JSON(http.StatusOK, &Response)
 	})
+
+	e.POST("/query", func(c echo.Context) error {
+		b := new(Req)
+		if err := c.Bind(b); err != nil {
+			return err
+		}
+		fmt.Println("Type rec : " + b.Type + "\nName : " + b.Name)
+		ResultStruc := fakeQuery(b.Name, b.Type)
+		var Response struct {
+			Status  string `json:"status"`
+			Time    string `json:"time"`
+			Results string `json:"results"`
+			Err     string `json:"error"`
+		}
+		Response.Status = "OK"
+		Response.Time = ResultStruc.time
+		Response.Results = ResultStruc.result
+		Response.Err = "N/a"
+		fmt.Println(Response)
+		return c.JSON(http.StatusOK, &Response)
+	})
+
 	e.Logger.Fatal(e.Start(":1010"))
 }
 ```
+- Replace calls to `fakeBuild` & `fakeQuery` with actual query and build functions
+- Response data should include times calculated as well as errors, status, and formatted results
