@@ -10,7 +10,7 @@ import (
 	gremlingo "github.com/apache/tinkerpop/gremlin-go/v3/driver"
 )
 
-//This file contains all of the necessary functions to interact with graph DB
+//This file contains all of the necessary functions to interact with Neptune DB with a gremlingo.GraphTraversalSource
 
 // Function to insert a Raw Material vertex within the graph.
 // returns an error if insertion fails, else returns nil
@@ -25,7 +25,7 @@ func insertRawMat(g *gremlingo.GraphTraversalSource, rawMat RawMaterials, proces
 	parentMaterialNum := rawMat.ParentMaterialNum
 
 	//adding a new vertex to g
-	res, err := g.AddV("rawMat").Property("name", parentMaterialNum).Property("materialNum", parentMaterialNum).Property("batchID", parentBatchID).Property("inputBatchID", childBatchID).Property("inputMaterialNum", childMaterialNum).Next()
+	res, err := g.AddV("rawMat").Property("name", parentMaterialNum).Property("materialNum", parentMaterialNum).Property("batchID", parentBatchID).Property("inputBatchID", childBatchID).Property("inputMaterialNum", childMaterialNum).Property("inputMaterialName", childMaterialName).Next()
 	if err != nil {
 		return errors.New("failed to insert raw material:" + childMaterialName + "\nBatch ID:" + childBatchID + "\nError:" + err.Error())
 	}
@@ -54,7 +54,7 @@ func insertResult(g *gremlingo.GraphTraversalSource, result Results) error {
 
 	// TODO: change resultID to include xpathhname + batchID
 	//currently resultID is being stored in vertex.ID, so it is based on gremlin
-	res, err := g.AddV("result").Property("name", resultID).Property("materialNum", result.MaterialNum).Property("batchID", resultID).Property("xpath", x_path_name).Property("result", result.Result).Property("DOM", result.DOM).Property("site", result.Site).Property("measureID", resultID).Next()
+	res, err := g.AddV("result").Property("name", "result:"+resultID).Property("materialNum", result.MaterialNum).Property("batchID", resultID).Property("xpath", x_path_name).Property("result", result.Result).Property("DOM", result.DOM).Property("site", result.Site).Property("measureID", resultID).Next()
 	if err != nil {
 		return errors.New("failed to execute query for xpath:" + x_path_name + "\nError:" + err.Error())
 	}
@@ -97,9 +97,9 @@ func insertXPathnEdge(g *gremlingo.GraphTraversalSource, x_path Xpath) error {
 
 // fucntion to insert a Process vertex within the graph.
 // returns an error if insertion fails. else returns name of process inserted
-func insertProcess(g *gremlingo.GraphTraversalSource, processName string, inputs []string, output string) (string, error) {
+func insertProcessDB(g *gremlingo.GraphTraversalSource, processName string, inputs []string, output string) (string, error) {
 
-	v := g.AddV("process").Property("name", processName).Property("output", output).Property(gremlingo.T.Id, processName).As(processName)
+	v := g.AddV("process").Property("name", processName).Property("output", output).Property(gremlingo.T.Id, processName+output).As(processName)
 
 	// if err != nil {
 	// 	return "", errors.New("failed to execute query for process:" + processName + "\nError:" + err.Error())
@@ -110,6 +110,7 @@ func insertProcess(g *gremlingo.GraphTraversalSource, processName string, inputs
 	// 	return "", errors.New("Not a vertex" + err.Error())
 	// }
 
+	//keep entering more input property attributes (there may be multiple inputs)
 	for _, input := range inputs {
 		v = v.Property("inputs", input)
 	}
@@ -128,10 +129,10 @@ func insertProcess(g *gremlingo.GraphTraversalSource, processName string, inputs
 func edgeProcessStage(g *gremlingo.GraphTraversalSource, processID string, stageID string) error {
 
 	newID := processID + stageID
-	_, err := g.AddE("has").From(g.V(processID)).To(g.V(stageID)).Property(gremlingo.T.Id, newID).Next()
+	_, err := g.AddE("process_stage").From(g.V(processID)).To(g.V(stageID)).Property(gremlingo.T.Id, newID).Next()
 
 	if err != nil {
-		return errors.New("failed to create an edge from:" + processID + "to" + stageID + "\nError:" + err.Error())
+		return errors.New("failed to create an edge from process:" + processID + " to stage:" + stageID + "\nError:" + err.Error())
 	}
 
 	return nil
@@ -139,12 +140,13 @@ func edgeProcessStage(g *gremlingo.GraphTraversalSource, processID string, stage
 
 // fucntion to insert a Stage vertex within the graph
 // returns an error if insertion fails, else returns nil
-func insertStage(g *gremlingo.GraphTraversalSource, stage Stage) (string, error) {
+func insertStage(g *gremlingo.GraphTraversalSource, processId string, stage Stage) (string, error) {
 	stageName := stage.Stage
 	parts := strings.Split(stageName, " ")
 	stageID := parts[1]
 
-	_, err := g.AddV("stage").Property("name", stageName).Property(gremlingo.T.Id, stageID).As(stageID).Next()
+	newID := processId + stageID
+	_, err := g.AddV("stage").Property("name", stageName).Property(gremlingo.T.Id, newID).As(stageID).Next()
 
 	if err != nil {
 		return "", errors.New("failed to execute query for stageID:" + stageID + "\nError:" + err.Error())
@@ -152,8 +154,9 @@ func insertStage(g *gremlingo.GraphTraversalSource, stage Stage) (string, error)
 
 	//inserting any measures of stage
 	stageMeasures := stage.Measures
+
 	for _, measure := range stageMeasures {
-		measureID, err := insertMeasure(g, measure)
+		measureID, err := insertMeasure(g, newID, measure)
 		if err != nil {
 			return "", err
 		}
@@ -162,8 +165,7 @@ func insertStage(g *gremlingo.GraphTraversalSource, stage Stage) (string, error)
 			return "", err
 		}
 	}
-
-	return stageID, nil
+	return newID, nil
 }
 
 // fucntion to insert an edge between a stage and operation
@@ -174,7 +176,7 @@ func edgeStageOperation(g *gremlingo.GraphTraversalSource, stageID string, opera
 	_, err := g.AddE("has").From(g.V(stageID)).To(g.V(operationID)).Property(gremlingo.T.Id, newID).Next()
 
 	if err != nil {
-		return errors.New("failed to create an edge from:" + stageID + "to" + operationID + "\nError:" + err.Error())
+		return errors.New("failed to create an edge from stage:" + stageID + " to operation:" + operationID + "\nError:" + err.Error())
 	}
 
 	return nil
@@ -182,12 +184,13 @@ func edgeStageOperation(g *gremlingo.GraphTraversalSource, stageID string, opera
 
 // fucntion to insert a Measure vertex within the graph
 // returns an error if insertion fails, else returns nil
-func insertOperation(g *gremlingo.GraphTraversalSource, operation Operation) (string, error) {
+func insertOperation(g *gremlingo.GraphTraversalSource, stageID string, operation Operation) (string, error) {
 	operationName := operation.Operation
 	parts := strings.Split(operationName, " ")
 	operationID := parts[1]
 
-	_, err := g.AddV("operation").Property("name", operationName).Property(gremlingo.T.Id, operationID).As(operationID).Next()
+	newId := stageID + operationID
+	_, err := g.AddV("operation").Property("name", operationName).Property(gremlingo.T.Id, newId).As(operationID).Next()
 
 	if err != nil {
 		return "", errors.New("failed to execute query for operationID:" + operationID + "\nError:" + err.Error())
@@ -196,7 +199,7 @@ func insertOperation(g *gremlingo.GraphTraversalSource, operation Operation) (st
 	//inserting any measures of stage
 	operationMeasures := operation.Measures
 	for _, measure := range operationMeasures {
-		measureID, err := insertMeasure(g, measure)
+		measureID, err := insertMeasure(g, newId, measure)
 		if err != nil {
 			return "", err
 		}
@@ -217,24 +220,25 @@ func edgeOperationAction(g *gremlingo.GraphTraversalSource, operationID string, 
 	_, err := g.AddE("has").From(g.V(operationID)).To(g.V(actionID)).Property(gremlingo.T.Id, newID).Next()
 
 	if err != nil {
-		return errors.New("failed to create an edge from:" + operationID + "to" + actionID + "\nError:" + err.Error())
+		return errors.New("failed to create an edge from operation:" + operationID + " to action:" + actionID + "\nError:" + err.Error())
 	}
 
 	return nil
 }
 
-func insertAction(g *gremlingo.GraphTraversalSource, action Action) (string, error) {
+func insertAction(g *gremlingo.GraphTraversalSource, operationID string, action Action) (string, error) {
 	actionName := action.Action
 	parts := strings.Split(actionName, " ")
 	actionID := parts[1]
 
-	_, err := g.AddV("action").Property("name", actionName).Property(gremlingo.T.Id, actionID).As(actionID).Next()
+	newID := operationID + actionID
+	_, err := g.AddV("action").Property("name", actionName).Property(gremlingo.T.Id, newID).As(actionID).Next()
 
 	if err != nil {
 		return "", errors.New("failed to execute query for stageID:" + actionID + "\nError:" + err.Error())
 	}
 
-	return actionID, nil
+	return newID, nil
 }
 
 // fucntion to insert an edge between a stage and a measure
@@ -245,7 +249,7 @@ func edgeStageMeasure(g *gremlingo.GraphTraversalSource, stageID string, measure
 	_, err := g.AddE("has").From(g.V(stageID)).To(g.V(measureID)).Property(gremlingo.T.Id, newID).Next()
 
 	if err != nil {
-		return errors.New("failed to create an edge from:" + stageID + "to" + measureID + "\nError:" + err.Error())
+		return errors.New("failed to create an edge from stage:" + stageID + " to measure" + measureID + "\nError:" + err.Error())
 	}
 
 	return nil
@@ -260,7 +264,7 @@ func edgeOperationMeasure(g *gremlingo.GraphTraversalSource, operationID string,
 	_, err := g.AddE("has").From(g.V(operationID)).To(g.V(measureID)).Property(gremlingo.T.Id, newID).Next()
 
 	if err != nil {
-		return errors.New("failed to create an edge from:" + operationID + "to" + measureID + "\nError:" + err.Error())
+		return errors.New("failed to create an edge from operations:" + operationID + "to measure" + measureID + "\nError:" + err.Error())
 	}
 
 	return nil
@@ -274,7 +278,7 @@ func edgeActionMeasure(g *gremlingo.GraphTraversalSource, actionID string, measu
 	_, err := g.AddE("has").From(g.V(actionID)).To(g.V(measureID)).Property(gremlingo.T.Id, newID).Next()
 
 	if err != nil {
-		return errors.New("failed to create an edge from:" + actionID + "to" + measureID + "\nError:" + err.Error())
+		return errors.New("failed to create an edge from action:" + actionID + " to measure" + measureID + "\nError:" + err.Error())
 	}
 
 	return nil
@@ -282,17 +286,18 @@ func edgeActionMeasure(g *gremlingo.GraphTraversalSource, actionID string, measu
 
 // fucntion to insert a Measure vertex within the graph
 // returns an error if insertion fails, else returns nil
-func insertMeasure(g *gremlingo.GraphTraversalSource, measure Measure) (string, error) {
+func insertMeasure(g *gremlingo.GraphTraversalSource, connectID string, measure Measure) (string, error) {
 	measureName := measure.Measure
 	measureID := measure.MeasureID
 
-	_, err := g.AddV("measure").Property("name", measureName).Property(gremlingo.T.Id, measureID).As(measureID).Next()
+	newID := connectID + measureID
+	_, err := g.AddV("measure").Property("name", measureName).Property(gremlingo.T.Id, newID).As(measureID).Next()
 
 	if err != nil {
 		return "", errors.New("failed to execute query for measureID:" + measureID + "\nError:" + err.Error())
 	}
 
-	return measureID, nil
+	return newID, nil
 }
 
 func getAllResults(g *gremlingo.GraphTraversalSource, name string) {

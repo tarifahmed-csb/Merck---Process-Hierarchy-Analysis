@@ -238,22 +238,11 @@ func getInputsOutput(rawmats []RawMaterials) ([]string, string) {
 
 func getInputsMap(rawmats []RawMaterials) map[string]string {
 	inputs := make(map[string]string)
-	count := 0
-	for _, rawmat := range rawmats {
-		inputName := rawmat.ChildMaterialName
-		inputNum := rawmat.ChildMaterialNum
-		child := rawmat.ChildBatchID
-		println("here is input num:" + inputNum + "\n&input name:" + inputName + "& child" + child)
 
-		if count == 15 {
-			break
-		}
-		count++
-	}
 	for _, rawmat := range rawmats {
 		inputName := rawmat.ChildMaterialName
 		inputNum := rawmat.ChildMaterialNum
-		println("here is input num:" + inputNum)
+		//println("here is input num:" + inputNum)
 
 		//if inputName exists in map then break; we have reached all possible inputs
 		if _, exists := inputs[inputName]; exists {
@@ -279,15 +268,17 @@ func insertNewProcess(g *gremlingo.GraphTraversalSource, name string, process Mo
 	//Here we iterate through processes to store the next levels in the hierarchy
 	process_stages := process.Hierarchy.Stages
 
+	processID := processName + output
 	//this outer loop traverses stages
 	for _, stage := range process_stages {
 		//this inserts the stage along with any connected measures
-		stageID, err := insertStage(g, stage)
+		stageID, err := insertStage(g, processID, stage)
 		if err != nil {
 			log.Fatal(err)
 		}
 		//this connects newly inserted stage with the process
-		err = edgeProcessStage(g, processName, stageID)
+		//we know the unique id is processName + output
+		err = edgeProcessStage(g, processID, stageID)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -296,7 +287,8 @@ func insertNewProcess(g *gremlingo.GraphTraversalSource, name string, process Mo
 		//this loop traverses operations
 		for _, operation := range operations {
 			//this inserts the operation along with any connected measures
-			operationID, err := insertOperation(g, operation)
+			operationID, err := insertOperation(g, stageID, operation)
+			print(operationID + "\n")
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -311,7 +303,7 @@ func insertNewProcess(g *gremlingo.GraphTraversalSource, name string, process Mo
 			//this loop traverses actions
 			for _, action := range actions {
 				//this inserts the action along with any connected measures
-				actionID, err := insertAction(g, action)
+				actionID, err := insertAction(g, operationID, action)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -322,10 +314,10 @@ func insertNewProcess(g *gremlingo.GraphTraversalSource, name string, process Mo
 				}
 				measures := action.Measures
 
-				//this loop traverses measures
+				//this loop traverses action measures
 				for _, measure := range measures {
 
-					measureID, err := insertMeasure(g, measure)
+					measureID, err := insertMeasure(g, actionID, measure)
 					if err != nil {
 						log.Fatal(err)
 					}
