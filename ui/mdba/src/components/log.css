@@ -1,0 +1,14 @@
+table, th, td {
+    border: 3px solid black;
+    border-collapse: collapse;
+    width: 900px;
+}
+table{
+    height: 300px;
+    overflow-y: scroll;
+    display: flex;
+    scroll-behavior: smooth;
+}
+td {
+    text-align: left;
+}
