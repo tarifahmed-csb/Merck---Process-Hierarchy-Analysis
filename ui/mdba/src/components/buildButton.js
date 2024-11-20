@@ -12,40 +12,24 @@ function buildButton() {
 
 async function DBuild(p1, p2) {
   console.log(p1)
-  // 1010 for Graph
-  /*
-  fetch('http://localhost:1010/build', {
-    headers:{
-      "Content-Type": "application/json",
-      'Access-Control-Allow-Origin' : '*',
-    },
-    method: "POST",
-    body: JSON.stringify({
-      Type: "build",
-      Name: "test",
-    }),
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log('Suc:', data);
-    var Gdata = data;
-  })
-  .catch((error) => {console.error('ERR', error)});
-  */
+  
   var xhr = new XMLHttpRequest();
-  var url = "http://localhost:1010/build";
-  xhr.open("POST", url, true);
-  xhr.setRequestHeader("Content-Type", "application/json");
-  xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-          var json = JSON.parse(xhr.responseText);
-          console.log("Status: "+json.status + ", Time: " + json.time + ", Error: " +json.error);
-          alert("Status: "+json.status + "\nTime: " + json.time + "\nError: " +json.error);
-      }
-  };
-  var data = JSON.stringify({"type": "build", "name": "test"});
-  xhr.send(data);
-
+  var testURL = "http://localhost:1010/build"
+  var urls  = ["http://localhost:1010/build"/*, "http://localhost:1011/build", "http://localhost:1012/build"*/]
+  // Loops through the declared URLs ^ and makes a request and awaits a response from all of them
+  for (var url in urls){
+    xhr.open("POST", testURL, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            var json = JSON.parse(xhr.responseText);
+            console.log("Status: "+json.status + ", Time: " + json.time + ", Error: " +json.error);
+            alert("Status: "+json.status + "\nTime: " + json.time + "\nError: " +json.error);
+        }
+    };
+    var data = JSON.stringify({"type": "build", "name": "test"});
+    xhr.send(data);
+  }
 
   // ----------------------------------------------------------------------- KILL ME ----------------------------------------------------------
   //1011 for Dynamo
@@ -88,5 +72,3 @@ async function DBuild(p1, p2) {
 }
 
 export default buildButton
-
-// On Click will need to access the DB backends and run their mains

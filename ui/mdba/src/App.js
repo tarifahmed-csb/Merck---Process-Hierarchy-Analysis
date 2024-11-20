@@ -1,6 +1,7 @@
 import './App.css';
 import BuildButton from "./components/buildButton.js";
 import QueryDrop from "./components/queryDrop.js";
+import LogData from "./components/log.js"
 
 function App() {
   return (
@@ -11,9 +12,12 @@ function App() {
       <div>
         <BuildButton />
       </div>
-      <br/>
+      <br />
       <div>
         <QueryDrop />
+      </div>
+      <div>
+        <LogData />
       </div>
     </div>
   );
