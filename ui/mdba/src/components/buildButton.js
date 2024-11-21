@@ -4,21 +4,25 @@ import buildImg from '../assets/Build_Button.svg';
 function buildButton() {
   return (
     <div>
-        
-        <img src={buildImg} alt='Build Database' onClick={() => DBuild('Building ...', 'test')}/>
+      <label form='process'>Enter a process create</label>
+      <br/>
+      <input type='text' name='process' id='process' defaultValue='***'/>
+      <br/>
+      <img src={buildImg} alt='Build Database' onClick={() => DBuild('Building ...', 'test')}/>
     </div>
   )
 }
 
 async function DBuild(p1, p2) {
   console.log(p1)
-  
+  var procName = document.getElementById('process').value
+
   var xhr = new XMLHttpRequest();
-  var testURL = "http://localhost:1010/build"
-  var urls  = ["http://localhost:1010/build"/*, "http://localhost:1011/build", "http://localhost:1012/build"*/]
+  var urls  = ["http://localhost:1010/build", "http://localhost:1011/build", "http://localhost:1012/build"]
   // Loops through the declared URLs ^ and makes a request and awaits a response from all of them
-  for (var url in urls){
-    xhr.open("POST", testURL, true);
+  for (var i = 0; i < urls.length; i++){
+    console.log(urls[i])
+    xhr.open("POST", urls[i], true);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
@@ -27,11 +31,11 @@ async function DBuild(p1, p2) {
             alert("Status: "+json.status + "\nTime: " + json.time + "\nError: " +json.error);
         }
     };
-    var data = JSON.stringify({"type": "build", "name": "test"});
+    var data = JSON.stringify({"type": "build", "name": procName});
     xhr.send(data);
   }
 
-  // ----------------------------------------------------------------------- KILL ME ----------------------------------------------------------
+  // ------------------------------------------------------------ KILL ME ---------------------------------------------------------------------
   //1011 for Dynamo
   /*
   fetch('http://localhost:1011/build', {
