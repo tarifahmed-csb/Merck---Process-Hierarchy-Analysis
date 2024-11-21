@@ -4,9 +4,9 @@ import buildImg from '../assets/Build_Button.svg';
 function buildButton() {
   return (
     <div>
-      <label form='process'>Enter a process create</label>
+      <label form='buildProc'>Enter a process create</label>
       <br/>
-      <input type='text' name='process' id='process' defaultValue='***'/>
+      <input type='text' name='buildProc' id='buildProc' defaultValue='***'/>
       <br/>
       <img src={buildImg} alt='Build Database' onClick={() => DBuild('Building ...', 'test')}/>
     </div>
@@ -15,7 +15,7 @@ function buildButton() {
 
 async function DBuild(p1, p2) {
   console.log(p1)
-  var procName = document.getElementById('process').value
+  var procName = document.getElementById('buildProc').value
 
   var xhr = new XMLHttpRequest();
   var urls  = ["http://localhost:1010/build", "http://localhost:1011/build", "http://localhost:1012/build"]

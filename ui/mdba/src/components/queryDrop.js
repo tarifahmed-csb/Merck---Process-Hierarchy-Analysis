@@ -18,9 +18,9 @@ function queryDrop() {
                 </select>
             </div>
             <div id='procEntry'>
-                <label form='process'>Enter a process to query</label>
+                <label form='queryProc'>Enter a process to query</label>
                 <br/>
-                <input type='text' name='process' id='process' defaultValue='***'/>
+                <input type='text' name='queryProc' id='queryProc' defaultValue='***'/>
             </div>
             <br/>
             <br/>
@@ -34,7 +34,7 @@ function queryDrop() {
 }
 
 async function query(type) {
-    var procName = document.getElementById('process').value
+    var procName = document.getElementById('queryProc').value
     var e = document.getElementById(type);
     var query_type = e.value;
     var urls  = ["http://localhost:1010/query", "http://localhost:1011/query", "http://localhost:1012/query"]
