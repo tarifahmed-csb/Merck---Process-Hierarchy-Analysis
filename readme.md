@@ -84,6 +84,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -92,12 +94,6 @@ import (
 type Req struct {
 	Type string `json:"Type"`
 	Name string `json:"Name"`
-}
-
-func enableCORS(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-	(*w).Header().Set("Access-Control-Allow-Methods", "POST,GET")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Content-Type")
 }
 
 func fakeBuild(s string) string {
@@ -140,6 +136,19 @@ func main() {
 		Response.Time = rTime
 		Response.Err = "N/a"
 		fmt.Println(Response)
+		// append response data to ./assets/logDat.txt
+		// for production the path needs to route the the root then down
+		// dynamo for Ex: ../ui/mdba/src/assets/logDat.txt
+		logFile, err := os.OpenFile("./src/assets/logDat.txt", os.O_APPEND, 0644)
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer logFile.Close()
+		_, err = logFile.WriteString("Runtime: " + time.Now().Format("2006-01-02 15:04:05") + ", Status: " + Response.Status + ", Time: " + Response.Time + ", Error: " + Response.Err + ",\n")
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(" LOGGED :: \nRuntime: " + time.Now().Format("2006-01-02 15:04:05") + ", Status: " + Response.Status + ", Time: " + Response.Time + ", Error: " + Response.Err + ",\n")
 		return c.JSON(http.StatusOK, &Response)
 	})
 
@@ -161,6 +170,18 @@ func main() {
 		Response.Results = ResultStruc.result
 		Response.Err = "N/a"
 		fmt.Println(Response)
+		logFile, err := os.OpenFile("./src/assets/logDat.txt", os.O_APPEND, 0644)
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer logFile.Close()
+		_, err = logFile.WriteString("Runtime: " + time.Now().Format("2006-01-02 15:04:05") + ", Status: " + Response.Status +
+			", Time: " + Response.Time + ", Results: " + Response.Results + ", Error: " + Response.Err + ",\n")
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(" LOGGED :: \nRuntime: " + time.Now().Format("2006-01-02 15:04:05") + ", Status: " + Response.Status +
+			", Time: " + Response.Time + ", Results: " + Response.Results + ", Error: " + Response.Err + ",\n")
 		return c.JSON(http.StatusOK, &Response)
 	})
 
