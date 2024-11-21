@@ -1,15 +1,27 @@
 import React from 'react'
+import './queryDrop.css'
 
 function queryDrop() {
     return(
         <div>
-            <label form='queries'>Select a query type</label>
+            
+            
             <br/>
-            <select name='queries' id='queries' defaultValue='default'>
-            <option value='measures'>Find all Measurements</option>
-            <option value='processes'>Find all Processes</option>
-            <option value='rawMat'>Find all Raw Materials</option>
-            </select>
+            <br/>
+            <div id='querySel'>
+                <label form='queries'>Select a query type</label>
+                <br/>
+                <select name='queries' id='queries' defaultValue='default'>
+                    <option value='measures'>Find all Measurements</option>
+                    <option value='processes'>Find all Processes</option>
+                    <option value='rawMat'>Find all Raw Materials</option>
+                </select>
+            </div>
+            <div id='procEntry'>
+                <label form='process'>Enter a process to query</label>
+                <br/>
+                <input type='text' name='process' id='process' defaultValue='***'/>
+            </div>
             <br/>
             <br/>
             <button type='button' form='queries' formMethod='post' onClick={() => query('queries')}>
@@ -22,6 +34,7 @@ function queryDrop() {
 }
 
 async function query(type) {
+    var procName = document.getElementById('process').value
     var e = document.getElementById(type);
     var query_type = e.value;
     console.log(query_type);
