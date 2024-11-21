@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bufio"
+	//"bufio"
 	"fmt"
-	"os"
+	//"os"
 	"sort"
 	"strings"
 	"time"
@@ -23,7 +23,7 @@ type Entity struct {
 
 func query(prefix, entityType string) (status string, duration string, errMsg string) {
 	// Establish the table name
-	tableName := "Merck-Fall2024-Final"
+	tableName := "Merck-Fall2024-Final-2"
 
 	// Create a new AWS session
 	sess, err := session.NewSession(&aws.Config{
