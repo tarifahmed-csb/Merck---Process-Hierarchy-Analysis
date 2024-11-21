@@ -21,7 +21,7 @@ type Entity struct {
 	EntityType string `json:"EntityType"` 
 }
 
-func query(prefix, entityType string) (status string, duration string, errMsg string) {
+func query(prefix, entityType string) (status string, duration string, results string, errMsg string) {
 	// Establish the table name
 	tableName := "Merck-Fall2024-Final-2"
 
@@ -30,7 +30,7 @@ func query(prefix, entityType string) (status string, duration string, errMsg st
 		Region: aws.String("us-east-1"),
 	})
 	if err != nil {
-		return "Failed", "0ms", fmt.Sprintf("Failed to create session: %v", err)
+		return "Failed", "0ms", "", fmt.Sprintf("Failed to create session: %v", err)
 	}
 
 	// Create DynamoDB client
@@ -59,7 +59,7 @@ func query(prefix, entityType string) (status string, duration string, errMsg st
 	// Execute the scan
 	result, err := svc.Scan(input)
 	if err != nil {
-		return "Failed", "0ms", fmt.Sprintf("Failed to scan the table: %v", err)
+		return "Failed", "0ms", "", fmt.Sprintf("Failed to scan the table: %v", err)
 	}
 
 	// Stop timing
@@ -67,9 +67,11 @@ func query(prefix, entityType string) (status string, duration string, errMsg st
 
 	// Unmarshal the result into a slice of Entity structs
 	var entities []Entity
+	var res string
+
 	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &entities)
 	if err != nil {
-		return "Failed", "0ms", fmt.Sprintf("Failed to unmarshal results: %v", err)
+		return "Failed", "0ms", "", fmt.Sprintf("Failed to unmarshal results: %v", err)
 	}
 
 	// Sort the results
@@ -79,18 +81,19 @@ func query(prefix, entityType string) (status string, duration string, errMsg st
 
 	// Check if any entities are found
 	if len(entities) == 0 {
-		return "OK", fmt.Sprintf("%.2f ms", float64(durationTime.Milliseconds())), "No items found"
+		return "OK", fmt.Sprintf("%.2f ms", float64(durationTime.Milliseconds())), "", "No items found"
 	} else {
 		// Output the results if needed (optional)
 		// For example, just for debugging purposes, you could return these as part of the response
 		// This step can be skipped if not needed
 		for _, entity := range entities {
 			fmt.Printf("%s: %s\n", entityType, entity.EntityID)
+			res += fmt.Sprintf("%s: %s", entityType, entity.EntityID)
 		}
 	}
 
 	// Return the successful execution details
-	return "OK", fmt.Sprintf("%.2f ms", float64(durationTime.Milliseconds())), ""
+	return "OK", fmt.Sprintf("%.2f ms", float64(durationTime.Milliseconds())), res, ""
 }
 
 // func query(tableName, entityType string) {

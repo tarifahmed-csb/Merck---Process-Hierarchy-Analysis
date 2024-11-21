@@ -74,27 +74,29 @@ func queryHandler(c echo.Context) error {
 	}
 
 	// Declare variables for response
-	var status, timeTaken, errMsg string
+	var status, timeTaken, results, errMsg string
 
 	// Determine the type of query
 	switch req.Type {
 	case "measures":
-		status, timeTaken, errMsg = query(req.Proc, "Measure")
+		status, timeTaken, results, errMsg = query(req.Proc, "Measure")
 	case "results":
-		status, timeTaken, errMsg = query(req.Proc, "Result")
+		status, timeTaken, results, errMsg = query(req.Proc, "Result")
 	case "materials":
-		status, timeTaken, errMsg = query(req.Proc, "RawMaterial")
+		status, timeTaken, results, errMsg = query(req.Proc, "RawMaterial")
 	default:
 		errMsg = "Invalid query type"
 		status = "failed"
 		timeTaken = "0s"
+		results = ""
 	}
 
 	// Construct the response
 	resp := map[string]string{
-		"status": status,
-		"time":   timeTaken,
-		"err":    errMsg,
+		"status": 	status,
+		"time":   	timeTaken,
+		"results": 	results, 
+		"err":    	errMsg,
 	}
 
 	// Send response as JSON
