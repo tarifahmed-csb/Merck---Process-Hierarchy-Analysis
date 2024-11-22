@@ -4,9 +4,6 @@ import './queryDrop.css'
 function queryDrop() {
     return(
         <div>
-            
-            
-            <br/>
             <br/>
             <div id='querySel'>
                 <label form='queries'>Select a query type</label>
@@ -18,9 +15,9 @@ function queryDrop() {
                 </select>
             </div>
             <div id='procEntry'>
-                <label form='process'>Enter a process to query</label>
+                <label form='queryProc'>Enter a process to query</label>
                 <br/>
-                <input type='text' name='process' id='process' defaultValue='***'/>
+                <input type='text' name='queryProc' id='queryProc' defaultValue='***'/>
             </div>
             <br/>
             <br/>
@@ -34,16 +31,14 @@ function queryDrop() {
 }
 
 async function query(type) {
-    var procName = document.getElementById('process').value
+    var procName = document.getElementById('queryProc').value
     var e = document.getElementById(type);
     var query_type = e.value;
-    var urls  = ["http://localhost:1010/query", "http://localhost:1011/query", "http://localhost:1012/query"]
-    // Loops through the declared URLs ^ and makes a request and awaits a response from all of them
-    console.log(query_type);
-    var xhr = new XMLHttpRequest();
-    if (query_type == 'measures') { // --------------------------------- Measurement Query -----------------------------------------------
-        for (var i = 0; i < urls.length; i++){
-            xhr.open("POST", urls[i], true);
+    // urls  = ["http://localhost:1010/query", "http://localhost:1011/query", "http://localhost:1012/query"]
+    if (query_type === 'measures') { // --------------------------------- Measurement Query ----------------------------------------------- 
+            //---------------------------------------------------------- to :1010 --------------------------------------------------------
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://localhost:1010/query", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4 && xhr.status === 200) {
@@ -53,11 +48,12 @@ async function query(type) {
                 }
             };
             var data = JSON.stringify({"type": "measures", "name": procName});
+            console.log("URL: http://localhost:1010/query\nType: measures\nName: "+procName)
             xhr.send(data);
-        }
-    } else if (query_type == 'processes') { // --------------------------------- Process Query --------------------------------------
-        for (var i = 0; i < urls.length; i++){
-            xhr.open("POST", urls[i], true);
+
+            //--------------------------------------------------------- to :1011 --------------------------------------------------------
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://localhost:1011/query", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4 && xhr.status === 200) {
@@ -66,12 +62,13 @@ async function query(type) {
                     alert("Status: "+json.status + "\nTime: " + json.time + ", Results: \n"+ json.results + "\nError: " +json.error);
                 }
             };
-            var data = JSON.stringify({"type": "process", "name": procName});
+            data = JSON.stringify({"type": "measures", "name": procName});
+            console.log("URL: http://localhost:1011/query\nType: measures\nName: "+procName)
             xhr.send(data);
-    }
-    } else if (query_type == 'rawMat') { // --------------------------------- Raw Material Query ---------------------------------------
-        for (var i = 0; i < urls.length; i++){
-            xhr.open("POST", urls[i], true);
+
+            //--------------------------------------------------------- to :1012 --------------------------------------------------------
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://localhost:1012/query", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4 && xhr.status === 200) {
@@ -80,9 +77,99 @@ async function query(type) {
                     alert("Status: "+json.status + "\nTime: " + json.time + ", Results: \n"+ json.results + "\nError: " +json.error);
                 }
             };
-            var data = JSON.stringify({"type": "rawMat", "name": procName});
+            data = JSON.stringify({"type": "measures", "name": procName});
+            console.log("URL: http://localhost:1012/query\nType: measures\nName: "+procName)
             xhr.send(data);
-        }
+    } else if (query_type === 'processes') { // --------------------------------- Process Query --------------------------------------
+        //--------------------------------------------------------- to :1010 --------------------------------------------------------
+        xhr = new XMLHttpRequest();    
+        xhr.open("POST", "http://localhost:1010/query", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var json = JSON.parse(xhr.responseText);
+                    console.log("Status: "+json.status + ", Time: " + json.time + ", Results: \n"+ json.results +"\nError: " +json.error);
+                    alert("Status: "+json.status + "\nTime: " + json.time + ", Results: \n"+ json.results + "\nError: " +json.error);
+                }
+            };
+            data = JSON.stringify({"type": "process", "name": procName});
+            console.log("URL: http://localhost:1010/query\nType: process\nName: "+procName)
+            xhr.send(data);
+
+            //------------------------------------------------------ to :1011 --------------------------------------------------------
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://localhost:1011/query", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var json = JSON.parse(xhr.responseText);
+                    console.log("Status: "+json.status + ", Time: " + json.time + ", Results: \n"+ json.results +"\nError: " +json.error);
+                    alert("Status: "+json.status + "\nTime: " + json.time + ", Results: \n"+ json.results + "\nError: " +json.error);
+                }
+            };
+            data = JSON.stringify({"type": "process", "name": procName});
+            console.log("URL: http://localhost:1011/query\nType: process\nName: "+procName)
+            xhr.send(data);
+
+            //------------------------------------------------------- to :1012 --------------------------------------------------------
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://localhost:1012/query", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var json = JSON.parse(xhr.responseText);
+                    console.log("Status: "+json.status + ", Time: " + json.time + ", Results: \n"+ json.results +"\nError: " +json.error);
+                    alert("Status: "+json.status + "\nTime: " + json.time + ", Results: \n"+ json.results + "\nError: " +json.error);
+                }
+            };
+            data = JSON.stringify({"type": "process", "name": procName});
+            console.log("URL: http://localhost:1012/query\nType: process\nName: "+procName)
+            xhr.send(data);
+    } else if (query_type === 'rawMat') { // --------------------------------- Raw Material Query ---------------------------------------
+        //------------------------------------------------------------ to :1010 --------------------------------------------------------
+        xhr = new XMLHttpRequest();    
+        xhr.open("POST", "http://localhost:1010/query", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var json = JSON.parse(xhr.responseText);
+                    console.log("Status: "+json.status + ", Time: " + json.time + ", Results: \n"+ json.results +"\nError: " +json.error);
+                    alert("Status: "+json.status + "\nTime: " + json.time + ", Results: \n"+ json.results + "\nError: " +json.error);
+                }
+            };
+            data = JSON.stringify({"type": "rawMat", "name": procName});
+            console.log("URL: http://localhost:1010/query\nType: rawMat\nName: "+procName)
+            xhr.send(data);
+
+            //---------------------------------------------------------- to :1011 --------------------------------------------------------
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://localhost:1011/query", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var json = JSON.parse(xhr.responseText);
+                    console.log("Status: "+json.status + ", Time: " + json.time + ", Results: \n"+ json.results +"\nError: " +json.error);
+                    alert("Status: "+json.status + "\nTime: " + json.time + ", Results: \n"+ json.results + "\nError: " +json.error);
+                }
+            };
+            data = JSON.stringify({"type": "rawMat", "name": procName});
+            console.log("URL: http://localhost:1011/query\nType: rawMat\nName: "+procName)
+            xhr.send(data);
+
+            //----------------------------------------------------------- to :1012 --------------------------------------------------------
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://localhost:1012/query", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var json = JSON.parse(xhr.responseText);
+                    console.log("Status: "+json.status + ", Time: " + json.time + ", Results: \n"+ json.results +"\nError: " +json.error);
+                    alert("Status: "+json.status + "\nTime: " + json.time + ", Results: \n"+ json.results + "\nError: " +json.error);
+                }
+            };
+            data = JSON.stringify({"type": "rawMat", "name": procName});
+            console.log("URL: http://localhost:1012/query\nType: rawMat\nName: "+procName)
+            xhr.send(data);
     } else {
         console.log('INVALID TYPE')
     }
