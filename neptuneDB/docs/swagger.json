@@ -1,14 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "golang API Template",
-        "title": "Golang API template",
-        "contact": {
-            "name": "Author Email",
-            "email": "author@lehigh.edu"
-        }
+        "contact": {}
     },
-    "host": "localhost:8080",
     "paths": {
         "/v1/dataModel/{name}": {
             "get": {
@@ -53,15 +47,5 @@
                 "responses": {}
             }
         }
-    },
-    "tags": [
-        {
-            "description": "endpoints with metadata about the API",
-            "name": "metadata"
-        },
-        {
-            "description": "data model endpoints",
-            "name": "dataModels"
-        }
-    ]
+    }
 }
