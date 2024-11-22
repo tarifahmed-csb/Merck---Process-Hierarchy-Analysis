@@ -220,17 +220,16 @@ func assignRandomStagesOperationsActionsMeasures(db *sql.DB, processes, stages, 
 	}
 }
 
-func main() {
+// processBaseDataFlow performs the complete process of regenerating base data,
+// finding the max process, inserting a new process, and assigning random stages,
+// operations, actions, and measures.
+func populateDatabase(processName string) error {
 	// Connect to the database
 	db, err := connectToDB()
 	if err != nil {
-		log.Fatalf("%v\n", err)
+		return fmt.Errorf("failed to connect to the database: %v", err)
 	}
 	defer db.Close()
-
-	// Prompt the user to enter a process name
-	processName := getProcessName()
-	fmt.Printf("You entered process name: %s\n", processName)
 
 	// Run saveBaseData.go to regenerate baseProcess.txt
 	runSaveBaseData()
@@ -238,7 +237,7 @@ func main() {
 	// Find the highest process value in baseProcess.txt
 	maxProcess, err := getMaxProcessFromFile(fileName)
 	if err != nil {
-		log.Fatalf("Error finding max process: %v\n", err)
+		return fmt.Errorf("error finding max process: %v", err)
 	}
 	fmt.Printf("The highest process value in %s is: %d\n", fileName, maxProcess)
 
@@ -246,7 +245,7 @@ func main() {
 	newProcess := maxProcess + 1
 	err = insertProcessToDB(db, newProcess, processName)
 	if err != nil {
-		log.Fatalf("Error inserting new process into database: %v\n", err)
+		return fmt.Errorf("error inserting new process into the database: %v", err)
 	}
 	fmt.Printf("Successfully inserted new process: %d with label: %s\n", newProcess, processName)
 
@@ -256,34 +255,137 @@ func main() {
 	// Read lines from files
 	processes, err := readLines("baseProcess.txt")
 	if err != nil {
-		fmt.Println("Error reading baseProcess.txt:", err)
-		return
+		return fmt.Errorf("error reading baseProcess.txt: %v", err)
 	}
 
 	stages, err := readLines("baseStage.txt")
 	if err != nil {
-		fmt.Println("Error reading baseStage.txt:", err)
-		return
+		return fmt.Errorf("error reading baseStage.txt: %v", err)
 	}
 
 	operations, err := readLines("baseOperation.txt")
 	if err != nil {
-		fmt.Println("Error reading baseOperation.txt:", err)
-		return
+		return fmt.Errorf("error reading baseOperation.txt: %v", err)
 	}
 
 	actions, err := readLines("baseAction.txt")
 	if err != nil {
-		fmt.Println("Error reading baseAction.txt:", err)
-		return
+		return fmt.Errorf("error reading baseAction.txt: %v", err)
 	}
 
 	measures, err := readLines("baseMeasure_id.txt")
 	if err != nil {
-		fmt.Println("Error reading baseMeasure_id.txt:", err)
-		return
+		return fmt.Errorf("error reading baseMeasure_id.txt: %v", err)
 	}
 
 	// Assign random stages, operations, actions, and measures to the specified process
 	assignRandomStagesOperationsActionsMeasures(db, processes, stages, operations, actions, measures, processName)
+
+	return nil
+}
+
+func getMeasureIDsForProcess(db *sql.DB, process string) (status string, duration string, results string, errMsg string) {
+	query := `
+	SELECT 
+		measure_id, 
+		label
+	FROM 
+		table_hierarchy
+	WHERE 
+		process = (
+			SELECT process
+			FROM table_hierarchy 
+			WHERE label = $1
+			LIMIT 1
+		)
+		AND measure_id IS NOT NULL;
+	`
+
+	// Record the start time
+	startTime := time.Now()
+
+	// Execute the query
+	rows, err := db.Query(query, process)
+	if err != nil {
+		errMsg = fmt.Sprintf("Error executing query: %v", err)
+		return "failed", "", "", errMsg
+	}
+	defer rows.Close()
+	// Measure execution time
+	durationTime := time.Since(startTime)
+
+	// Process query results
+	var resultBuilder strings.Builder // To construct the results string
+	count := 0
+
+	for rows.Next() {
+		var measureID, label string
+		if err := rows.Scan(&measureID, &label); err != nil {
+			errMsg = fmt.Sprintf("Error scanning row: %v", err)
+			return "failed", "", "", errMsg
+		}
+		// Append the current row to the results
+		resultBuilder.WriteString(fmt.Sprintf("Measure ID: %s, Label: %s\n", measureID, label))
+		count++
+	}
+
+	if err := rows.Err(); err != nil {
+		errMsg = fmt.Sprintf("Error iterating rows: %v", err)
+		return "failed", "", "", errMsg
+	}
+
+	// Prepare output
+	status = "OK"
+	duration = fmt.Sprintf("%v", durationTime)
+	results = resultBuilder.String()
+
+	return status, duration, results, ""
+}
+
+func main() {
+
+	// Connect to the database
+	db, err := connectToDB()
+	if err != nil {
+		log.Fatalf("%v\n", err)
+	}
+	defer db.Close()
+	fmt.Println("Choose an action:")
+	fmt.Println("1: Enter process name and populate database")
+	fmt.Println("2: Query Measure IDs and Labels for a process")
+	fmt.Print("Enter your choice: ")
+
+	var choice int
+	_, err = fmt.Scan(&choice)
+	if err != nil {
+		log.Fatalf("Invalid input: %v", err)
+	}
+
+	// Switch statement for handling choices
+	switch choice {
+	case 1:
+		processName := getProcessName()
+		fmt.Printf("You entered process name: %s\n", processName)
+
+		// Handle database population
+		if err := populateDatabase(processName); err != nil {
+			log.Fatalf("Error during process base data flow: %v\n", err)
+		}
+	case 2:
+		// Prompt the user for a process ID
+		var process string
+		fmt.Print("Enter process ID: ")
+		_, err := fmt.Scan(&process)
+		if err != nil {
+			log.Fatalf("Invalid input: %v", err)
+		}
+
+		// Execute the query and display results
+		status, duration, results, errMsg := getMeasureIDsForProcess(db, process)
+		if status == "failed" {
+			fmt.Printf("Error: %s\n", errMsg)
+		} else {
+			fmt.Printf("Status: %s\nDuration: %s\nResults:\n%s", status, duration, results)
+		}
+	}
 }
