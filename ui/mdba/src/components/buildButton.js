@@ -4,21 +4,23 @@ import buildImg from '../assets/Build_Button.svg';
 function buildButton() {
   return (
     <div>
-        
-        <img src={buildImg} alt='Build Database' onClick={() => DBuild('Building ...', 'test')}/>
+      <label form='buildProc'>Enter a process create</label>
+      <br/>
+      <input type='text' name='buildProc' id='buildProc' defaultValue='***'/>
+      <br/>
+      <img src={buildImg} alt='Build Database' onClick={() => DBuild('Building ...', 'test')}/>
     </div>
   )
 }
 
 async function DBuild(p1, p2) {
   console.log(p1)
-  
+  var procName = document.getElementById('buildProc').value
+
   var xhr = new XMLHttpRequest();
-  var testURL = "http://localhost:1010/build"
-  var urls  = ["http://localhost:1010/build"/*, "http://localhost:1011/build", "http://localhost:1012/build"*/]
-  // Loops through the declared URLs ^ and makes a request and awaits a response from all of them
-  for (var url in urls){
-    xhr.open("POST", testURL, true);
+  //urls  = ["http://localhost:1010/build", "http://localhost:1011/build", "http://localhost:1012/build"]
+  // -------------------------------------------------- :1010 -----------------------------------------------------------------------------
+    xhr.open("POST", "http://localhost:1010/build", true);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
@@ -27,11 +29,41 @@ async function DBuild(p1, p2) {
             alert("Status: "+json.status + "\nTime: " + json.time + "\nError: " +json.error);
         }
     };
-    var data = JSON.stringify({"type": "build", "name": "test"});
+    var data = JSON.stringify({"type": "build", "name": procName});
+    console.log("URL: http://localhost:1010/build\nType: build\nName: "+procName)
     xhr.send(data);
-  }
 
-  // ----------------------------------------------------------------------- KILL ME ----------------------------------------------------------
+    // -------------------------------------------------- :1011 -----------------------------------------------------------------------------
+    xhr = new XMLHttpRequest();
+    xhr.open("POST", "http://localhost:1011/build", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            var json = JSON.parse(xhr.responseText);
+            console.log("Status: "+json.status + ", Time: " + json.time + ", Error: " +json.error);
+            alert("Status: "+json.status + "\nTime: " + json.time + "\nError: " +json.error);
+        }
+    };
+    data = JSON.stringify({"type": "build", "name": procName});
+    console.log("URL: http://localhost:1011/build\nType: build\nName: "+procName)
+    xhr.send(data);
+
+    // -------------------------------------------------- :1012 -----------------------------------------------------------------------------
+    xhr = new XMLHttpRequest();
+    xhr.open("POST", "http://localhost:1012/build", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            var json = JSON.parse(xhr.responseText);
+            console.log("Status: "+json.status + ", Time: " + json.time + ", Error: " +json.error);
+            alert("Status: "+json.status + "\nTime: " + json.time + "\nError: " +json.error);
+        }
+    };
+    data = JSON.stringify({"type": "build", "name": procName});
+    console.log("URL: http://localhost:1012/build\nType: build\nName: "+procName)
+    xhr.send(data);
+
+  // ------------------------------------------------------------ KILL ME ---------------------------------------------------------------------
   //1011 for Dynamo
   /*
   fetch('http://localhost:1011/build', {

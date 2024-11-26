@@ -35,6 +35,12 @@ button {
   cursor: pointer;
 }
 
+#bigBuild {
+  position: fixed;
+  top: 50px;
+  left: 50px;
+}
+
 .gradient {
   position: absolute;
   width: 100%;

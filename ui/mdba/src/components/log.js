@@ -8,7 +8,11 @@ function log(){
     return(
         <div className='log' wi="true">
             <h1>
-                <button onClick={loadData}>Logged Requests</button>
+                <button onClick={loadData}>
+                    <span className="transition"></span>
+                    <span className="gradient"></span>
+                    <span className="label">Logged Requests</span>
+                </button>
             </h1>
             <table id='logTable' align='center'>
             </table>

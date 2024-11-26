@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"os"
+	//"os"
 	"time"
 	"strings"
 
@@ -14,7 +14,7 @@ import (
 // PopulateDatabase populates the database for a given process name
 func PopulateDatabase(processName string) (status string, duration string, errMsg string) {
 	// Define the table name inside the function
-	tableName := "Merck-Fall2024-Final"
+	tableName := "Merck-Fall2024-Final-2"
 
 	// Create a new AWS session
 	sess, err := session.NewSession(&aws.Config{
