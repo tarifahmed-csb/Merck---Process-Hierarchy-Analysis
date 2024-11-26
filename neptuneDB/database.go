@@ -38,7 +38,7 @@ func insertRawMat(g *gremlingo.GraphTraversalSource, rawMat RawMaterials, proces
 
 	//result vertex inserted, now adding edge from respective process to raw material it outputs
 	//newID := measureID + x_path_name
-	_, err = g.AddE("outputs").From(g.V(processName)).To(g.V(vertex.Id)).Next()
+	_, err = g.AddE("outputs").From(g.V(processName)).To(vertex).Next()
 
 	if err != nil {
 		return errors.New("failed to insert edge for process with ouput:" + parentMaterialNum + "\nWith batch:" + parentBatchID + " & input batch:" + childBatchID + "\nError:" + err.Error())
@@ -448,13 +448,14 @@ func getAllResults(g *gremlingo.GraphTraversalSource, name string) {
 func getAllProcesses(g *gremlingo.GraphTraversalSource) {
 	fmt.Println("\n\nHere are all Processes:")
 	start := time.Now()
-	result, err := g.V().HasLabel("Process").ToList()
+	result, err := g.V().HasLabel("process").ToList()
 	end := time.Now()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for _, vertex := range result {
+		//returns the vertex id in format: v[id]
 		fmt.Println(vertex.GetString())
 	}
 	elapsedTime := end.Sub(start)
@@ -481,7 +482,24 @@ func getAllMeasures(g *gremlingo.GraphTraversalSource, name string) {
 	fmt.Println("\n\nGetting all measures for Process " + name + ":")
 	start := time.Now()
 
-	result, err := g.V(name).Repeat(gremlingo.T__.Out()).Until(gremlingo.T__.HasLabel("Measure")).ToList()
+	result, err := g.V(name).Repeat(gremlingo.T__.Out()).Until(gremlingo.T__.HasLabel("measure")).ToList()
+
+	end := time.Now()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, vertex := range result {
+		fmt.Println(vertex.GetString())
+	}
+	elapsedTime := end.Sub(start)
+	fmt.Println("Elapsed Time:", elapsedTime)
+}
+
+func getAllRawMaterials(g *gremlingo.GraphTraversalSource, name string) {
+	fmt.Println("\n\nGetting all raw materials for Process " + name + ":")
+	start := time.Now()
+
+	result, err := g.V(name).Repeat(gremlingo.T__.Out("outputs")).Until(gremlingo.T__.HasLabel("rawMat")).ToList()
 
 	end := time.Now()
 	if err != nil {
@@ -498,7 +516,7 @@ func getAllChildren(g *gremlingo.GraphTraversalSource, name string) {
 	fmt.Println("\n\nGetting all children for Process " + name + ":")
 	start := time.Now()
 
-	result, err := g.V(name).Repeat(gremlingo.T__.Out()).Until(gremlingo.T__.HasLabel("Measure")).Path().ToList()
+	result, err := g.V(name).Repeat(gremlingo.T__.Out()).Until(gremlingo.T__.HasLabel("measure")).Path().ToList()
 
 	end := time.Now()
 	if err != nil {

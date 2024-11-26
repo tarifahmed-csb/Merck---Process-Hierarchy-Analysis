@@ -55,41 +55,55 @@ func main() {
 		case 1:
 			fmt.Println("You chose Option 1")
 			// Ask the user to input a name for a process
-			fmt.Print("Enter a name for the process: ")
+			fmt.Print("Enter a name for the single process: ")
+			processName, _ := reader.ReadString('\n')
+			processName = processName[:len(processName)-2] // Remove newline character & /r
+			modelOutput, err := ModelData(processName)
+			if err != nil {
+				log.Fatal("Error creating new process")
+			}
+			insertNewProcess(g, processName, modelOutput)
+		case 2:
+			fmt.Println("You chose Option 2")
+			// Ask the user to input a name for a process
+			fmt.Print("Enter a name for the MASTER process: ")
 			processName, _ := reader.ReadString('\n')
 			processName = processName[:len(processName)-2] // Remove newline character & /r
 			insertNewProcesses(g, processName)
-		case 2:
-			fmt.Println("You chose Option 2")
-			getAllProcesses(g)
 
 		case 3:
 			fmt.Println("You chose Option 3")
 			fmt.Println("Enter the name of the Process")
 			processName, _ := reader.ReadString('\n')
 			processName = processName[:len(processName)-2] // Remove newline character
-			getAllStages(g, processName)
-		case 4:
-			fmt.Println("You chose Option 4")
-			fmt.Println("Enter the name of the Process")
-			processName, _ := reader.ReadString('\n')
-			processName = processName[:len(processName)-2] // Remove newline character
-			getAllChildren(g, processName)
+			getAllRawMaterials(g, processName)
 		case 5:
 			fmt.Println("You chose Option 5")
 			fmt.Println("Enter the name of the Process")
 			processName, _ := reader.ReadString('\n')
 			processName = processName[:len(processName)-2] // Remove newline character
-			getAllMeasures(g, processName)
+			getAllStages(g, processName)
 		case 6:
 			fmt.Println("You chose Option 6")
+			fmt.Println("Enter the name of the Process")
+			processName, _ := reader.ReadString('\n')
+			processName = processName[:len(processName)-2] // Remove newline character
+			getAllChildren(g, processName)
+		case 7:
+			fmt.Println("You chose Option 7")
+			fmt.Println("Enter the name of the Process")
+			processName, _ := reader.ReadString('\n')
+			processName = processName[:len(processName)-2] // Remove newline character
+			getAllMeasures(g, processName)
+		case 8:
+			fmt.Println("You chose Option 8")
 			fmt.Println("Enter the name of the Process")
 
 			processName, _ := reader.ReadString('\n')
 			processName = processName[:len(processName)-2] // Remove newline character
 			getAllResults(g, processName)
-		case 7:
-			fmt.Println("You chose Option 7")
+		case 9:
+			fmt.Println("You chose Option 9...testing function")
 
 			test(g)
 		}
@@ -108,13 +122,15 @@ func main() {
 
 func printMenu() {
 	fmt.Println("Choose an action (1-5):")
-	fmt.Println("1. Insert a new process")
-	fmt.Println("2. Query all Processes")
-	fmt.Println("3. Query all Stages of a given Process")
-	fmt.Println("4. Query all children of a given Process")
-	fmt.Println("5. Query all measures for a given Process")
-	fmt.Println("6. Query all results for a given Process")
-	fmt.Println("7. Test")
+	fmt.Println("1. Insert a single process")
+	fmt.Println("2. Insert a master process with input processes")
+	fmt.Println("3. Query all Raw Materials of a Process")
+	fmt.Println("4. Query all Processes")
+	fmt.Println("5. Query all Stages of a given Process")
+	fmt.Println("6. Query all children of a given Process")
+	fmt.Println("7. Query all measures for a given Process")
+	fmt.Println("8. Query all results for a given Process")
+	fmt.Println("9. Test")
 	fmt.Print("Enter your choice: ")
 
 }
@@ -316,6 +332,11 @@ func insertNewProcess(g *gremlingo.GraphTraversalSource, name string, process Mo
 			log.Fatal(err)
 		}
 
+	}
+
+	rawMats := process.RawMaterials
+	for _, rawMaterial := range rawMats {
+		insertRawMat(g, rawMaterial, processId)
 	}
 
 	return processId
