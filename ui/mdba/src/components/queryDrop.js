@@ -34,10 +34,11 @@ async function query(type) {
     var procName = document.getElementById('queryProc').value
     var e = document.getElementById(type);
     var query_type = e.value;
+    var xhr;
     // urls  = ["http://localhost:1010/query", "http://localhost:1011/query", "http://localhost:1012/query"]
     if (query_type === 'measures') { // --------------------------------- Measurement Query ----------------------------------------------- 
             //---------------------------------------------------------- to :1010 --------------------------------------------------------
-            var xhr = new XMLHttpRequest();
+            xhr = new XMLHttpRequest();
             xhr.open("POST", "http://localhost:1010/query", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.onreadystatechange = function () {
