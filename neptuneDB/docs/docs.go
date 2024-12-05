@@ -9,10 +9,7 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {
-            "name": "Author Email",
-            "email": "author@lehigh.edu"
-        },
+        "contact": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -61,27 +58,17 @@ const docTemplate = `{
                 "responses": {}
             }
         }
-    },
-    "tags": [
-        {
-            "description": "endpoints with metadata about the API",
-            "name": "metadata"
-        },
-        {
-            "description": "data model endpoints",
-            "name": "dataModels"
-        }
-    ]
+    }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "",
-	Host:             "localhost:8080",
+	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Golang API template",
-	Description:      "golang API Template",
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

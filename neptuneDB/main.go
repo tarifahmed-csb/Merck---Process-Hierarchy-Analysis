@@ -46,7 +46,7 @@ func main() {
 
 		choice, err := strconv.Atoi(input)
 
-		if err != nil || choice < 1 || choice > 6 {
+		if err != nil || choice < 1 || choice > 8 {
 			fmt.Println("Invalid input. Please enter a number between 1 and 5.")
 			continue
 		}
@@ -55,39 +55,57 @@ func main() {
 		case 1:
 			fmt.Println("You chose Option 1")
 			// Ask the user to input a name for a process
-			fmt.Print("Enter a name for the process: ")
+			fmt.Print("Enter a name for the single process: ")
+			processName, _ := reader.ReadString('\n')
+			processName = processName[:len(processName)-2] // Remove newline character & /r
+			modelOutput, err := ModelData(processName)
+			if err != nil {
+				log.Fatal("Error creating new process")
+			}
+			insertNewProcess(g, processName, modelOutput)
+		case 2:
+			fmt.Println("You chose Option 2")
+			// Ask the user to input a name for a process
+			fmt.Print("Enter a name for the MASTER process: ")
 			processName, _ := reader.ReadString('\n')
 			processName = processName[:len(processName)-2] // Remove newline character & /r
 			insertNewProcesses(g, processName)
-		case 2:
-			fmt.Println("You chose Option 2")
-			getAllProcesses(g)
 
 		case 3:
 			fmt.Println("You chose Option 3")
 			fmt.Println("Enter the name of the Process")
 			processName, _ := reader.ReadString('\n')
 			processName = processName[:len(processName)-2] // Remove newline character
-			getAllStages(g, processName)
-		case 4:
-			fmt.Println("You chose Option 4")
-			fmt.Println("Enter the name of the Process")
-			processName, _ := reader.ReadString('\n')
-			processName = processName[:len(processName)-2] // Remove newline character
-			getAllChildren(g, processName)
+			getAllRawMaterials(g, processName)
 		case 5:
 			fmt.Println("You chose Option 5")
 			fmt.Println("Enter the name of the Process")
 			processName, _ := reader.ReadString('\n')
 			processName = processName[:len(processName)-2] // Remove newline character
-			getAllMeasures(g, processName)
+			getAllStages(g, processName)
 		case 6:
 			fmt.Println("You chose Option 6")
+			fmt.Println("Enter the name of the Process")
+			processName, _ := reader.ReadString('\n')
+			processName = processName[:len(processName)-2] // Remove newline character
+			getAllChildren(g, processName)
+		case 7:
+			fmt.Println("You chose Option 7")
+			fmt.Println("Enter the name of the Process")
+			processName, _ := reader.ReadString('\n')
+			processName = processName[:len(processName)-2] // Remove newline character
+			getAllMeasures(g, processName)
+		case 8:
+			fmt.Println("You chose Option 8")
 			fmt.Println("Enter the name of the Process")
 
 			processName, _ := reader.ReadString('\n')
 			processName = processName[:len(processName)-2] // Remove newline character
 			getAllResults(g, processName)
+		case 9:
+			fmt.Println("You chose Option 9...testing function")
+
+			test(g)
 		}
 
 		// Ask the user if they want to continue
@@ -104,12 +122,15 @@ func main() {
 
 func printMenu() {
 	fmt.Println("Choose an action (1-5):")
-	fmt.Println("1. Insert a new process")
-	fmt.Println("2. Query all Processes")
-	fmt.Println("3. Query all Stages of a given Process")
-	fmt.Println("4. Query all children of a given Process")
-	fmt.Println("5. Query all measures for a given Process")
-	fmt.Println("6. Query all results for a given Process")
+	fmt.Println("1. Insert a single process")
+	fmt.Println("2. Insert a master process with input processes")
+	fmt.Println("3. Query all Raw Materials of a Process")
+	fmt.Println("4. Query all Processes")
+	fmt.Println("5. Query all Stages of a given Process")
+	fmt.Println("6. Query all children of a given Process")
+	fmt.Println("7. Query all measures for a given Process")
+	fmt.Println("8. Query all results for a given Process")
+	fmt.Println("9. Test")
 	fmt.Print("Enter your choice: ")
 
 }
@@ -117,7 +138,7 @@ func printMenu() {
 // Create a new process hierarchy using the ModelData function.
 // This function calls a helper function that inserts the structured data into a graph database
 func insertNewProcesses(g *gremlingo.GraphTraversalSource, name string) {
-	fmt.Println("Inserting new Process: " + name + "\nLoading data...")
+	fmt.Println("Inserting Master Process: " + name + "\nLoading data...")
 
 	start := time.Now()
 
@@ -159,7 +180,7 @@ func insertNewProcesses(g *gremlingo.GraphTraversalSource, name string) {
 	//first we insert the bottom most process which has the name the user has inputted
 	//remember this will out contain stages, actions, measures, results etc.
 	//so we must pass in the orignial ModelData (named process)
-	insertNewProcess(g, name, process)
+	originalProcessId := insertNewProcess(g, name, process)
 
 	//With the inputs we collected (k:name, v: num) of the current process, we can go ahead and create unique processes for each input
 
@@ -168,44 +189,17 @@ func insertNewProcesses(g *gremlingo.GraphTraversalSource, name string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		insertNewProcess(g, inputName, newProcess)
+		newProcessId := insertNewProcess(g, inputName, newProcess)
 		//within here once a new process has been created, then we do:
-		//insertInputEdgeForProcess(newProcess, originalProcess)
+		err = insertInputEdgeForProcess(g, newProcessId, originalProcessId)
+		if err != nil {
+			log.Fatal(err)
+		}
 		//to connect an input edge from the new process to the original process
 	}
 
 	//TODO figure a way to connect the new ModelDataParent Process as the input to original process
 
-	// rawmats := output.RawMaterials
-
-	// for _, rawmat := range rawmats {
-	// 	//err = insertRawMat(g, rawmat)
-	// }
-
-	//from a process give all measures,
-	//linking raw materials to processes (jumping from one process to another)
-	//
-
-	// result, err := g.AddE("has").From(g.V("test-1")).To(g.V("test-1-1-1-M1")).Next()
-
-	// fmt.Println("here is result:")
-
-	// fmt.Println(result)
-	// fmt.Println("here is err")
-
-	// fmt.Println(err)
-
-	// Perform traversal
-	// results, err := g.V().Limit(5).ToList()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-	// // Print results
-	// fmt.Println("printing here")
-	// for _, r := range results {
-	// 	fmt.Println(r.GetString())
-	// }
 	end := time.Now()
 
 	fmt.Println("Database Updated!")
@@ -256,11 +250,14 @@ func getInputsMap(rawmats []RawMaterials) map[string]string {
 	return inputs
 }
 
-func insertNewProcess(g *gremlingo.GraphTraversalSource, name string, process ModelOutput) {
+func insertNewProcess(g *gremlingo.GraphTraversalSource, name string, process ModelOutput) string {
+
 	//first get inputs & outputs for the new process
 	inputs, output := getInputsOutput(process.RawMaterials)
+	fmt.Println("Inserting new Process: " + name + output + "\nLoading data...")
+
 	//Here we store process into the DB
-	processName, err := insertProcessDB(g, name, inputs, output)
+	processId, err := insertProcessDB(g, name, inputs, output)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -268,17 +265,16 @@ func insertNewProcess(g *gremlingo.GraphTraversalSource, name string, process Mo
 	//Here we iterate through processes to store the next levels in the hierarchy
 	process_stages := process.Hierarchy.Stages
 
-	processID := processName + output
 	//this outer loop traverses stages
 	for _, stage := range process_stages {
 		//this inserts the stage along with any connected measures
-		stageID, err := insertStage(g, processID, stage)
+		stageID, err := insertStage(g, processId, stage)
 		if err != nil {
 			log.Fatal(err)
 		}
 		//this connects newly inserted stage with the process
 		//we know the unique id is processName + output
-		err = edgeProcessStage(g, processID, stageID)
+		err = edgeProcessStage(g, processId, stageID)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -288,7 +284,6 @@ func insertNewProcess(g *gremlingo.GraphTraversalSource, name string, process Mo
 		for _, operation := range operations {
 			//this inserts the operation along with any connected measures
 			operationID, err := insertOperation(g, stageID, operation)
-			print(operationID + "\n")
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -312,48 +307,37 @@ func insertNewProcess(g *gremlingo.GraphTraversalSource, name string, process Mo
 				if err != nil {
 					log.Fatal(err)
 				}
-				measures := action.Measures
-
-				//this loop traverses action measures
-				for _, measure := range measures {
-
-					measureID, err := insertMeasure(g, actionID, measure)
-					if err != nil {
-						log.Fatal(err)
-					}
-					err = edgeActionMeasure(g, actionID, measureID)
-					if err != nil {
-						log.Fatal(err)
-					}
-				}
 
 			}
 		}
 	}
 	//Now iterate through x_paths & adds the vertexes
 	//Plus corresponding edges from measure to xpath
-	x_paths := process.Xpath
+	// x_paths := process.Xpath
 
-	for _, x_path := range x_paths {
-		err := insertXPathnEdge(g, x_path)
-		if err != nil {
-			log.Fatal(err)
-		}
+	// for _, x_path := range x_paths {
+	// 	err := insertXPathnEdge(g, x_path)
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
 
-	}
+	// }
 
 	ress := process.Results
 
 	for _, result := range ress {
-		err = insertResult(g, result)
+		err = connectMeasureToResultViaXpath(g, processId, result, process.Xpath)
 		//fmt.Println("in here")
 		if err != nil {
 			log.Fatal(err)
 		}
-		// fmt.Println(result.Result)
-		// fmt.Println(result.ResultName)
-		//RESULT NAME HOLDS MEAURE ID
 
-		//insertXPath(g, x_path)
 	}
+
+	rawMats := process.RawMaterials
+	for _, rawMaterial := range rawMats {
+		insertRawMat(g, rawMaterial, processId)
+	}
+
+	return processId
 }

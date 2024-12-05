@@ -1,10 +1,5 @@
-host: localhost:8080
 info:
-  contact:
-    email: author@lehigh.edu
-    name: Author Email
-  description: golang API Template
-  title: Golang API template
+  contact: {}
 paths:
   /v1/dataModel/{name}:
     get:
@@ -38,8 +33,3 @@ paths:
       tags:
       - metadata
 swagger: "2.0"
-tags:
-- description: endpoints with metadata about the API
-  name: metadata
-- description: data model endpoints
-  name: dataModels
