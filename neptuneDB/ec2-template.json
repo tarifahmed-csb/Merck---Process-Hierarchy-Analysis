@@ -1,0 +1,425 @@
+{
+    "Description": "Demo Template to create Neptune EC2 Client with gremlin and rdf4j console",  
+    "Parameters": {
+      "LatestAmiId": {
+        "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+        "Default": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+      },
+      "EC2SSHKeyPairName": {
+        "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances. Required Input",
+        "Type": "AWS::EC2::KeyPair::KeyName",
+        "ConstraintDescription": "Must be the name of an existing EC2 KeyPair in same region."
+      },
+      "Env": {
+        "Description": "Environment tag, e.g. prod, nonprod.",
+        "Default": "test",
+        "Type": "String",
+        "AllowedPattern": "[a-z0-9]+",
+        "MaxLength": 15
+      },
+      "EC2ClientInstanceType": {
+        "Description": "EC2 client instance",
+        "Type": "String",
+        "Default": "r5.xlarge",
+        "AllowedValues": [
+        "t2.micro",
+          "t3.micro",
+          "t3.small",
+          "t3.medium",
+          "m5.large",
+          "m5.xlarge",
+          "m5.2xlarge",
+          "m5.4xlarge",
+          "m5.12xlarge",
+          "r5.large",
+          "r5.xlarge",
+          "r5.2xlarge",
+          "r5.4xlarge",
+          "r5.12xlarge"
+        ],
+        "ConstraintDescription": "Must be a valid EC2 instance type."
+      },
+      "VPC": {
+        "Description": "Valid VPCId",
+        "Type": "AWS::EC2::VPC::Id",
+        "ConstraintDescription": "Must be the name of an existing VPC in same region."
+      },
+      "Subnet": {
+        "Description": "Valid Subnet",
+        "Type": "AWS::EC2::Subnet::Id",
+        "ConstraintDescription": "Must be the name of an existing Subnet in same region."
+      },
+      "NeptuneDBCluster": {
+        "Description": "Neptune DB Cluster Identifier",
+        "Type": "String"
+      },
+      "NeptuneDBClusterEndpoint": {
+        "Description": "Neptune DB Cluster Endpoint",
+        "Type": "String"
+      },
+      "NeptuneDBClusterPort": {
+        "Description": "Neptune DB Cluster Port",
+        "Type": "String"
+      },
+      "NeptuneClientRole": {
+        "Description": "Neptune Client Role ",
+        "Type": "String"
+      },
+      "NeptuneEC2ClientCustomizationScript": {
+        "Description": "Neptune EC2 client customization script",
+        "Type": "String",
+        "Default" : ""
+      },
+      "NeptuneEC2ClientExtraSG": {
+        "Description": "Neptune EC2 client custom SG",
+        "Type": "String",
+        "Default" : ""
+      },
+      "SetupGremlinConsole": {
+        "Type": "String",
+        "Default": "true",
+        "AllowedValues": [
+          "true",
+          "false"
+        ],
+        "Description": "Setup Gremlin console."
+      },
+      "SetupRDF4JConsole": {
+        "Type": "String",
+        "Default": "true",
+        "AllowedValues": [
+          "true",
+          "false"
+        ],
+        "Description": "Setup RDF4J console."
+      }
+    },
+    "Conditions": {
+      "AddExtraSGPresent": {
+        "Fn::Not": [
+          {
+            "Fn::Equals": [
+              {
+                "Ref": "NeptuneEC2ClientExtraSG"
+              },
+              ""
+            ]
+          }
+        ]
+      },
+      "SetupGremlinConsoleCondition": {
+        "Fn::Equals": [
+          {
+            "Ref": "SetupGremlinConsole"
+          },
+          "true"
+        ]
+      },
+      "SetupRDF4JConsoleCondition": {
+        "Fn::Equals": [
+          {
+            "Ref": "SetupRDF4JConsole"
+          },
+          "true"
+        ]
+      }
+    },
+    "Resources": {
+      "NeptuneEC2ClientInstance": {
+        "Type": "AWS::EC2::Instance",
+        "Properties": {
+          "KeyName": {
+            "Ref": "EC2SSHKeyPairName"
+          },
+          "InstanceType": {
+            "Ref": "EC2ClientInstanceType"
+          },
+          "ImageId": {
+            "Ref": "LatestAmiId"
+          },
+          "IamInstanceProfile": {
+            "Ref": "NeptuneEC2InstanceProfile"
+          },
+          "SubnetId": {
+            "Ref": "Subnet"
+          },
+          "SecurityGroupIds": [
+            {
+              "Ref": "NeptuneEc2ClientSG"
+            },
+            {
+              "Fn::If": [
+                "AddExtraSGPresent",
+                {
+                  "Ref": "NeptuneEC2ClientExtraSG"
+                },
+                {"Ref": "AWS::NoValue"}
+              ]
+            }
+          ],
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": {
+                "Fn::Sub": "Neptune-${Env}"
+              }
+            },
+            {
+              "Key": "StackId",
+              "Value": {
+                "Fn::Sub": "${AWS::StackName}"
+              }
+            },
+            {
+              "Key": "Stack",
+              "Value": {
+                "Fn::Sub": "${AWS::Region}-${AWS::StackName}"
+              }
+            },
+            {
+              "Key": "Application",
+              "Value": "NeptuneCloudformation"
+            }
+          ],
+          "UserData": {
+            "Fn::Base64": {
+              "Fn::Join": [
+                "",
+                [
+                  "#!/bin/bash -xe\n",
+                  "yum update -y ",
+                  "\n",
+                  "yum -y install python-pip",
+                  "\n",
+                  "yum -y install java-1.8.0-devel",
+                  "\n",
+                  "yum -y remove java-1.7.0-openjdk",
+                  "\n",
+                  "cur_dir=$PWD",
+                  "\n",
+                  "cd /home/ec2-user/",
+                  "\n",
+                  "pip install --upgrade awscli",
+                  "\n",
+                  "wget https://go.dev/dl/go1.23.1.linux-amd64.tar.gz",
+                  "\n",
+                  "rm -rf /usr/local/go",
+                  "\n",
+                  "sudo tar -C /usr/local -xzf go1.23.1.linux-amd64.tar.gz",
+                  "\n",
+                  "touch $HOME/.profile",
+                  "\n",
+                  "echo export 'PATH=$PATH:/usr/local/go/bin' >> $HOME/.profile",
+                  "\n",
+                  "source $HOME/.profile",
+                  "\n",
+                  {
+                    "Fn::If": [
+                      "SetupGremlinConsoleCondition",
+                      {
+                        "Fn::Join": ["", [
+                          "wget https://s3.amazonaws.com/aws-neptune-customer-samples/tinkerpop/apache-tinkerpop-gremlin-console-3.4.1-bin.zip",
+                          "\n",
+                          "unzip apache-tinkerpop-gremlin-console-3.4.1-bin.zip",
+                          "\n",
+                          "rm apache-tinkerpop-gremlin-console-3.4.1-bin.zip",
+                          "\n",
+                          "cd apache-tinkerpop-gremlin-console-3.4.1",
+                          "\n",
+                          "wget https://www.amazontrust.com/repository/SFSRootCAG2.pem",
+                          "\n",
+                          "cd conf",
+                          "\n",
+                          "echo hosts: [",
+                          {
+                            "Ref": "NeptuneDBClusterEndpoint"
+                          },
+                          "] >> neptune-remote.yaml",
+                          "\n",
+                          "echo port: ",
+                          {
+                            "Ref": "NeptuneDBClusterPort"
+                          },
+                          " >> neptune-remote.yaml",
+                          "\n",
+                          "echo connectionPool: { enableSsl: true, trustCertChainFile: \"SFSRootCAG2.pem\"}",
+                          " >> neptune-remote.yaml",
+                          "\n",
+                          "echo serializer: { className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV3d0, config: { serializeResultToString: true }}",
+                          " >> neptune-remote.yaml",
+                          "\n"
+                        ]]
+                      },
+                      {"Ref": "AWS::NoValue"}
+                    ]
+                  },
+                  "\n",
+                  "cd /home/ec2-user",
+                  "\n",
+                  {
+                    "Fn::If": [
+                      "SetupRDF4JConsoleCondition",
+                      {
+                        "Fn::Join": ["", [
+                          "wget https://s3.amazonaws.com/aws-neptune-customer-samples/rdf4j/eclipse-rdf4j-3.2.1-sdk.zip",
+                          "\n",
+                          "unzip eclipse-rdf4j-3.2.1-sdk.zip",
+                          "\n",
+                          "rm eclipse-rdf4j-3.2.1-sdk.zip",
+                          "\n"
+                        ]]
+                      },
+                      {"Ref": "AWS::NoValue"}
+                    ]
+                  },
+                  "\n",
+                  {
+                    "Ref": "NeptuneEC2ClientCustomizationScript"
+                  },
+                  "\n",
+                  "cd $cur_dir",
+                  "\n",
+                  "# Send signal to WaitHandle that the setup is completed\n",
+                  "/opt/aws/bin/cfn-signal",
+                  " -e 0",
+                  " '",
+                  {
+                    "Ref": "WaitHandle"
+                  },
+                  "'",
+                  "\n"
+                ]
+              ]
+            }
+          }
+        },
+        "Metadata": {
+          "AWS::CloudFormation::Init": {
+            "config": {
+              "packages": {
+                "yum": {}
+              }
+            }
+          }
+        }
+      },
+      "WaitHandle": {
+        "Type": "AWS::CloudFormation::WaitConditionHandle"
+      },
+      "WaitCondition": {
+        "Type": "AWS::CloudFormation::WaitCondition",
+        "DependsOn": "NeptuneEC2ClientInstance",
+        "Properties": {
+          "Handle": {
+            "Ref": "WaitHandle"
+          },
+          "Timeout": "1200"
+        }
+      },
+      "NeptuneEc2ClientSG": {
+        "Type": "AWS::EC2::SecurityGroup",
+        "Properties": {
+          "VpcId": {
+            "Ref": "VPC"
+          },
+          "GroupDescription": "Allow SSH Access from anywhere",
+          "SecurityGroupIngress": [
+            {
+              "FromPort": "22",
+              "ToPort": "22",
+              "IpProtocol": "tcp",
+              "CidrIp": "0.0.0.0/0",
+              "Description": "ssh from anywhere"
+            }
+          ],
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": {
+                "Fn::Sub": "Neptune-${Env}-ec2-ssh"
+              }
+            },
+            {
+              "Key": "StackId",
+              "Value": {
+                "Fn::Sub": "${AWS::StackId}"
+              }
+            },
+            {
+              "Key": "Stack",
+              "Value": {
+                "Fn::Sub": "${AWS::Region}-${AWS::StackName}"
+              }
+            },
+            {
+              "Key": "Application",
+              "Value": "NeptuneCloudformation"
+            }
+          ]
+        }
+      },
+      "NeptuneEC2InstanceProfile": {
+        "Type": "AWS::IAM::InstanceProfile",
+        "Properties": {
+          "Path": "/",
+          "Roles": [
+            {
+              "Ref": "NeptuneClientRole"
+            }
+          ]
+        }
+      }
+    },
+    "Outputs": {
+      "EC2Client": {
+        "Description": "EC2 client Identifier",
+        "Value": {
+          "Ref": "NeptuneEC2ClientInstance"
+        }
+      },
+      "SSHAccess": {
+        "Description": "This is how you gain remote access to the EC2 client.",
+        "Value": {
+          "Fn::Join": [
+            "",
+            [
+              "ssh ec2-user@",
+              {
+                "Fn::GetAtt": [
+                  "NeptuneEC2ClientInstance",
+                  "PublicIp"
+                ]
+              },
+              " -i ",
+              {
+                "Ref": "EC2SSHKeyPairName"
+              },
+              ".pem"
+            ]
+          ]
+        }
+      },
+      "EC2SSHTunnelCommand": {
+        "Description": "Command to connect to the local web server on the EC2 in VPC, you create an SSH tunnel between your computer and the EC2 node. This is also known as port forwarding.",
+        "Value": {
+          "Fn::Join": [
+            "",
+            [
+              "ssh ec2-user@",
+              {
+                "Fn::GetAtt": [
+                  "NeptuneEC2ClientInstance",
+                  "PublicIp"
+                ]
+              },
+              " -i ",
+              {
+                "Ref": "EC2SSHKeyPairName"
+              },
+              ".pem -L localhost:8080:localhost:8080"
+            ]
+          ]
+        }
+      }
+    }
+  }
