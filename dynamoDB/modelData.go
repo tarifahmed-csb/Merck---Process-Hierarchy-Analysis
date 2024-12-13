@@ -1,20 +1,24 @@
 /*
- * This package includes code inspired by the work of:
- *
- * Author: Brett Duersch
- * Title: Merck Process Hierarchy Modeling
- * Date: February 16, 2024 
- *
- * Probabilites modified to concise data
+* This package includes code inspired by the work of:
+*
+* Author: Brett Duersch
+* Title: Merck Process Hierarchy Modeling
+* Date: February 16, 2024
+*
+* Probabilites modified to concise data
 
- rand.seed()
- */
+rand.seed()
+*/
 package main
 
 import (
+	//"crypto/sha256"
 	"fmt"
+	"log"
 	"math"
+	//"math/big"
 	"math/rand"
+	"strconv"
 	"time"
 	"unicode/utf8"
 )
@@ -91,8 +95,8 @@ func defineP() map[string]map[string]float64 {
 	// "stdDev" = standard devation for batch results
 	// "offset" = max offset from mean for batch results
 	p["res"] = make(map[string]float64)
-	p["res"]["minBatch"] = 20
-	p["res"]["batch"] = 0.95
+	p["res"]["minBatch"] = 3
+	p["res"]["batch"] = 0.1
 	layout := "01/02/2006 3:04:05 PM"
 	t, _ := time.Parse(layout, "01/01/2022 9:03:46 AM")
 	p["res"]["startDOM"] = float64(t.Unix())
@@ -103,7 +107,7 @@ func defineP() map[string]map[string]float64 {
 
 	// "minRawMat" = minimum number of raw materials
 	p["rm"] = make(map[string]float64)
-	p["rm"]["minRawMat"] = 5
+	p["rm"]["minRawMat"] = 3
 	return p
 }
 
@@ -224,6 +228,65 @@ func MakeMeasure(
 	return
 }
 
+//MakeBatchesGivenMatNum(numSites int, p map[string]map[string]float64, matNum string)
+func MakeBatchesGivenMatNum(numSites int, p map[string]map[string]float64, matNum string) (
+	map[string][]Batch, []RawMaterials) {
+
+	siteBatch := make(map[string][]Batch)
+	rawMat := []RawMaterials{}
+
+	// independently calculate xpaths on a per-site basis
+	for i := 0; i < numSites; i++ {
+
+		theseBatches := []Batch{}
+		siteText := fmt.Sprintf("Site-%v", i+1)
+
+		numBatch := float64(0)
+		// generate random matnr for each site
+		matnr := matNum
+		DOM := p["res"]["startDOM"]
+
+		for true {
+
+			numBatch++
+			// evaluate continuation of process
+			if numBatch > p["res"]["minBatch"] && rand.Float64() > p["res"]["batch"] {
+				break
+			}
+
+			// increment DOM according to dateStep
+			DOM = DOM + 86400*(rand.Float64())*p["res"]["dateStep"]
+
+			thisBatch := Batch{}
+			thisBatch.BatchID = fmt.Sprintf("%v", math.Ceil(DOM/4321))
+			thisBatch.Site = siteText
+			thisBatch.MaterialNum = matnr
+			thisBatch.DOM = fmt.Sprintf("%v", time.Unix(int64(DOM), 0).Format("2006-01-02"))
+
+			theseBatches = append(theseBatches, thisBatch)
+
+			// define raw materials for the batch
+			for j := 0; j < int(p["rm"]["minRawMat"]); j++ {
+				thisRM := RawMaterials{}
+				thisRM.ParentBatchID = thisBatch.BatchID
+				thisRM.ParentMaterialNum = thisBatch.MaterialNum
+				thisRM.ChildMaterialName = fmt.Sprintf("RawMat-%v", j)
+				thisRM.ChildBatchID = fmt.Sprintf("%v", math.Ceil(rand.Float64()*300000))
+				intMatNum, err := strconv.Atoi(matNum)
+				if err != nil {
+					log.Fatal(err)
+				}
+				thisRM.ChildMaterialNum = fmt.Sprintf("%v", (j+1)*intMatNum) // matnr in moles -- remember chem 101 ;)
+
+				rawMat = append(rawMat, thisRM)
+			}
+		}
+		siteBatch[siteText] = theseBatches
+	}
+
+	return siteBatch, rawMat
+}
+
 func MakeBatches(numSites int, p map[string]map[string]float64) (
 	map[string][]Batch, []RawMaterials) {
 
@@ -307,6 +370,121 @@ func ModelData(name string) (ModelOutput, error) {
 
 	// generate the batch list and raw materails table
 	siteBatches, rawMat := MakeBatches(numSites, p)
+
+	for prc {
+
+		numStg++
+		// evaluate continuation of process
+		if numStg > p["prc"]["minLevel"] && rand.Float64() > p["prc"]["level"] {
+			break
+		}
+
+		stageID := fmt.Sprintf("%v-%v", name, numStg)
+		stgName := fmt.Sprintf("Stage: %v", stageID)
+		thisStage := Stage{}
+		thisStage.Stage = stgName
+
+		numOp = 0
+		for stg {
+
+			numOp++
+			// evaluate continuation of process
+			if numOp > p["stg"]["minLevel"] && rand.Float64() > p["stg"]["level"] {
+				break
+			}
+
+			opID := fmt.Sprintf("%v-%v", stageID, numOp)
+			opName := fmt.Sprintf("Operation: %v", opID)
+			thisOp := Operation{}
+			thisOp.Operation = opName
+
+			numAct = 0
+			for op {
+
+				numAct++
+				// evaluate continuation of process
+				if numAct > p["op"]["minLevel"] && rand.Float64() > p["op"]["level"] {
+					break
+				}
+
+				actID := fmt.Sprintf("%v-%v", opID, numAct)
+				actName := fmt.Sprintf("Action: %v", actID)
+				thisAct := Action{}
+				thisAct.Action = actName
+
+				mes, x, m, r := MakeMeasure(actID, "act", p, numSites, siteBatches)
+				thisAct.Measures = append(thisAct.Measures, mes...)
+				xPaths = append(xPaths, x...)
+				metaData = append(metaData, m...)
+				results = append(results, r...)
+
+				thisOp.Actions = append(thisOp.Actions, thisAct)
+
+			}
+
+			mes, x, m, r := MakeMeasure(opID, "op", p, numSites, siteBatches)
+			thisOp.Measures = append(thisOp.Measures, mes...)
+			xPaths = append(xPaths, x...)
+			metaData = append(metaData, m...)
+			results = append(results, r...)
+
+			thisStage.Operations = append(thisStage.Operations, thisOp)
+
+		}
+		mes, x, m, r := MakeMeasure(stageID, "stg", p, numSites, siteBatches)
+		thisStage.Measures = append(thisStage.Measures, mes...)
+		xPaths = append(xPaths, x...)
+		metaData = append(metaData, m...)
+		results = append(results, r...)
+
+		hier.Stages = append(hier.Stages, thisStage)
+	}
+
+	// assign output variables
+	outPut.Hierarchy = hier
+	outPut.Xpath = xPaths
+	outPut.Metadata = metaData
+	outPut.Results = results
+	outPut.RawMaterials = rawMat
+
+	return outPut, nil
+
+}
+
+//ModelDataParent(name string, matNum string)(ModelOutput, error)
+// creates a model data for a new drug process with name: name
+// this process will output matNum
+// this creates all necessary data for a heirarchy & its links (actions, inputs, stages etc.)
+func ModelDataParent(name string, matNum string) (ModelOutput, error) {
+
+	outPut := ModelOutput{}
+
+	// storage buffers
+	xPaths := []Xpath{}
+	metaData := []Metadata{}
+	results := []Results{}
+
+	// counters
+	var numStg float64 = 0
+	var numOp float64 = 0
+	var numAct float64 = 0
+
+	// for loop flags
+	prc := true
+	stg := true
+	op := true
+
+	p := defineP()
+
+	// hierarchy
+	hier := Process{}
+	hier.Process = name
+
+	// determine number of sites - will be used by measures / batches
+	numSites := int(math.Abs(math.Ceil(rand.NormFloat64()))) + 2
+
+	// generate the batch list and raw materails table
+	siteBatches, rawMat := MakeBatchesGivenMatNum(numSites, p, matNum)
 
 	for prc {
 
